@@ -25,5 +25,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          tags: us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }},us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest
+          tags: gcr.io/civic-eagle-enview-dev/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }},gcr.io/civic-eagle-enview-dev/statsd-http-proxy:latest
           push: true

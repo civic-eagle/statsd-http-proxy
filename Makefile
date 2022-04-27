@@ -1,7 +1,7 @@
 .PHONY: help all test fmt lint vendor-update build clean
 
 GH_ADDR := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g')
-DOCKER_USER := us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle
+DOCKER_USER := gcr.io/civic-eagle-enview-dev
 NAME := statsd-http-proxy
 GO_VER := 1.17.9
 CURRENT_UID := $(shell id -u)

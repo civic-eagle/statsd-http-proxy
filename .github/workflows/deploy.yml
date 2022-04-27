@@ -17,6 +17,8 @@ jobs:
         run: make build
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
+      - name: Set up docker -> gcp auth
+        run: gcloud auth configure-docker -q
       - name: Deploy
         run: |
           docker buildx build . \

@@ -1,4 +1,4 @@
-module github.com/johnseekins/statsd-http-proxy
+module github.com/civic-eagle/statsd-http-proxy
 
 go 1.17
 

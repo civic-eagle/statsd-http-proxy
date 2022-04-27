@@ -8,7 +8,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/johnseekins/statsd-http-proxy/proxy"
+	"github.com/civic-eagle/statsd-http-proxy/proxy"
 	log "github.com/sirupsen/logrus"
 )
 

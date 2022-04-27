@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/johnseekins/statsd-http-proxy/proxy/routehandler"
-	"github.com/johnseekins/statsd-http-proxy/proxy/router"
-	"github.com/johnseekins/statsd-http-proxy/proxy/statsdclient"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/router"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
-	"github.com/johnseekins/statsd-http-proxy/proxy/middleware"
-	"github.com/johnseekins/statsd-http-proxy/proxy/routehandler"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
 	"github.com/julienschmidt/httprouter"
 )
 

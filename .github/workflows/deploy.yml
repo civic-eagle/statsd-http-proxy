@@ -1,0 +1,16 @@
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy:
+    name: Deploy package
+    runs-on: self-hosted
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+    - name: Build
+      run: make build
+    - name: Deploy
+      run: make docker

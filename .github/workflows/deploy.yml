@@ -22,9 +22,8 @@ jobs:
           username: _json_key
           password: ${{ secrets.DEPLOY_KEY_FILE }}
       - name: Deploy
-        run: |
-          docker buildx build . \
-          --tag us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }} --push && \
-          docker tag us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }} \
-          us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest && \
-          docker push us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          tags: us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }},us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest
+          push: true

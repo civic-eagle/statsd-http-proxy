@@ -1,7 +1,7 @@
 .PHONY: help all test fmt lint vendor-update build clean
 
 GH_ADDR := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g')
-DOCKER_USER := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g' | cut -d"/" -f2)
+DOCKER_USER := us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle
 NAME := statsd-http-proxy
 GO_VER := 1.17.9
 CURRENT_UID := $(shell id -u)
@@ -47,9 +47,8 @@ build: envsetup ## actually build package
 	docker run --rm -v $(CURDIR)/.cache/:/.cache/ --user $(CURRENT_UID):$(CURRENT_GID) -v $(CURDIR):/app:z -w /app golang:$(GO_VER) go build -tags static,netgo -mod=vendor -ldflags="-X 'main.Version=$(PKG_TAG)' -X 'main.BuildUser=$(BUILDUSER)' -X 'main.BuildTime=$(BUILDTIME)'" -o $(NAME) .
 
 docker:
-	docker build . --tag $(DOCKER_USER)/$(NAME):$(PKG_TAG)
+	docker buildx build . --tag $(DOCKER_USER)/$(NAME):$(PKG_TAG) --push
 	docker tag $(DOCKER_USER)/$(NAME):$(PKG_TAG) $(DOCKER_USER)/$(NAME):latest
-	docker push $(DOCKER_USER)/$(NAME):$(PKG_TAG)
 	docker push $(DOCKER_USER)/$(NAME):latest
 
 clean: ## remove build artifacts

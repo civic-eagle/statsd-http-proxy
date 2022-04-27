@@ -8,9 +8,17 @@ jobs:
     name: Deploy package
     runs-on: self-hosted
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-    - name: Build
-      run: make build
-    - name: Deploy
-      run: make docker
+      - name: Get current tag
+        id: get_tag
+        run: echo ::set-output name=TAG::$(echo $GITHUB_REF | cut -d / -f 3)
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Build
+        run: make build
+      - name: Deploy
+        run: |
+          docker --config /opt/docker-config/ buildx build . \
+          --tag us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }} --push && \
+          docker tag us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:${{ steps.get_tag.outputs.TAG }} \
+          us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest && \
+          docker push us-docker.pkg.dev/civic-eagle-enview-dev/civiceagle/statsd-http-proxy:latest

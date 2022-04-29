@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
-	log "github.com/sirupsen/logrus"
 )
 
 // RouteHandler as a collection of route handlers

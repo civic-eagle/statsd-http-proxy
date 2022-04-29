@@ -34,7 +34,6 @@ func (routeHandler *RouteHandler) HandleMetric(
 	metricType string,
 	metricKey string,
 ) {
-	log.WithFields(log.Fields{"type": metricType, "metric": metricKey}).Debug("Processing Metric")
 	switch metricType {
 	case "count":
 		routeHandler.handleCountRequest(w, r, metricKey)

@@ -31,7 +31,6 @@ func procBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 		return []byte(""), err
 	}
 	r.Body.Close()
-	log.WithFields(log.Fields{"Body": string(body)}).Debug("Received message")
 
 	return body, nil
 }
@@ -53,7 +52,6 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 	if req.SampleRate != 0 {
 		sampleRate = float64(req.SampleRate)
 	}
-	log.WithFields(log.Fields{"Value": req.Value, "key": key}).Debug("Forwarding data to statsd")
 	routeHandler.statsdClient.Count(key, req.Value, float32(sampleRate))
 }
 
@@ -131,7 +129,6 @@ func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *htt
 }
 
 func processTags(tagsList string) string {
-	log.WithFields(log.Fields{"Tags": tagsList}).Debug("Processing potential tags")
 	list := strings.Split(strings.TrimSpace(tagsList), ",")
 	if len(list) == 0 {
 		return ""
@@ -150,6 +147,5 @@ func processTags(tagsList string) string {
 			return ""
 		}
 	}
-	log.WithFields(log.Fields{"Tags": tagsList}).Debug("Created tags")
 	return "," + tagsList
 }

@@ -18,20 +18,6 @@ Requests may be optionally authenticated using JWT tokens.
 make
 ```
 
-Also available [Docker image](https://hub.docker.com/r/johnseekins/statsd-http-proxy/):
-
-[![docker](https://img.shields.io/docker/pulls/johnseekins/statsd-http-proxy.svg?style=flat)](https://hub.docker.com/r/johnseekins/statsd-http-proxy/)
-
-```
-docker run -p 80:80 johnseekins/statsd-http-proxy:latest --verbose
-```
-
-Secure connection:
-
-```
-docker run -p 4433:4433 -v "$(pwd)":/certs/  johnseekins/statsd-http-proxy:latest --verbose --http-port=4433 --tls-cert=/certs/cert.pem --tls-key=/certs/key.pem
-```
-
 ## Nginx config
 
 Configuration of Nginx balancer:

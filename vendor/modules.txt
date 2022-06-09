@@ -4,9 +4,9 @@ github.com/GoMetric/go-statsd-client
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+# github.com/golang-jwt/jwt v3.2.2+incompatible
 ## explicit
-github.com/dgrijalva/jwt-go
+github.com/golang-jwt/jwt
 # github.com/julienschmidt/httprouter v1.3.0
 ## explicit; go 1.7
 github.com/julienschmidt/httprouter

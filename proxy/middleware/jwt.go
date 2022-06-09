@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	log "github.com/sirupsen/logrus"
 )
 
 const jwtQueryStringKeyName = "token"
 
 const JwtHeaderName = "X-JWT-Token"
+
+const parser = Parser()
 
 // validate JWT middleware
 func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {

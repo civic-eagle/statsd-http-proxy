@@ -12,8 +12,6 @@ const jwtQueryStringKeyName = "token"
 
 const JwtHeaderName = "X-JWT-Token"
 
-const parser = Parser()
-
 // validate JWT middleware
 func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

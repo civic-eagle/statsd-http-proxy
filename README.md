@@ -1,5 +1,7 @@
 # StatsD Rest Proxy
 
+*Note: This repository is a combination of forks from https://github.com/InjectiveLabs/statsd-http-proxy and https://github.com/GoMetric/statsd-http-proxy. Along with an improved build story.*
+
 StatsD uses UDP connections, and  can not be used directly from browser. This server is a HTTP proxy to StatsD, useful for sending metrics to StatsD from frontend by AJAX.
 
 Requests may be optionally authenticated using JWT tokens.

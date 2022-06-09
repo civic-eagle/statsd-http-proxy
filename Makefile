@@ -13,7 +13,7 @@ ifeq ($(PKG_TAG),)
 PKG_TAG := $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 10-17)))
 endif
 
-all: setup test build ## format, lint, and build the package
+all: setup test build docker ## format, lint, and build the package
 
 help:
 	@echo "Makefile targets:"

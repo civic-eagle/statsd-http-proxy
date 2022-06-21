@@ -42,7 +42,7 @@ func main() {
 	var httpHost = flag.String("http-host", defaultHTTPHost, "HTTP Host")
 	var httpPort = flag.Int("http-port", defaultHTTPPort, "HTTP Port")
 	var httpReadTimeout = flag.Int("http-timeout-read", defaultHTTPReadTimeout, "The maximum duration in seconds for reading the entire request, including the body")
-	var httpWriteTimeout = flag.Int("http-timeout-write", defaultHTTPWriteTimeout, "The maximum duration in seconds before timing out writes of the respons")
+	var httpWriteTimeout = flag.Int("http-timeout-write", defaultHTTPWriteTimeout, "The maximum duration in seconds before timing out writes of the response")
 	var httpIdleTimeout = flag.Int("http-timeout-idle", defaultHTTPIdleTimeout, "The maximum amount of time in seconds to wait for the next request when keep-alives are enabled")
 	var tlsCert = flag.String("tls-cert", "", "TLS certificate to enable HTTPS")
 	var tlsKey = flag.String("tls-key", "", "TLS private key  to enable HTTPS")

@@ -3,14 +3,14 @@
 GH_ADDR := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g')
 DOCKER_USER := gcr.io/civic-eagle-enview-dev
 NAME := statsd-http-proxy
-GO_VER := 1.17.9
+GO_VER := 1.18.3
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 BUILDTIME ?= $(shell date)
 BUILDUSER ?= $(shell id -u -n)
 PKG_TAG ?= $(shell git tag -l --points-at HEAD)
 ifeq ($(PKG_TAG),)
-PKG_TAG := $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 10-17)))
+PKG_TAG := $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 10-17 | tr ' ()' '-')))
 endif
 
 all: setup test build docker ## format, lint, and build the package

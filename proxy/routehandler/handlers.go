@@ -12,6 +12,7 @@ import (
 )
 
 type CountRequest struct {
+	Metric	string `json:"metric"`
 	Value    int    `json:"value,omitempty"`
 	Tags string `json:"tags,omitempty"`
 	SampleRate float64 `json:"sampleRate"`
@@ -35,7 +36,7 @@ func procBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *http.Request, key string) {
+func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := procBody(w, r)
 	if err != nil {
 		return
@@ -45,8 +46,7 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
-    key += processTags(req.Tags)	
+	var key = req.Metric + processTags(req.Tags)
 
 	var sampleRate float64 = 1
 	if req.SampleRate != 0 {
@@ -56,11 +56,12 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 }
 
 type GaugeRequest struct {
+	Metric	string `json:"metric"`
 	Value int    `json:"value,omitempty"`
 	Tags  string `json:"tags,omitempty"`
 }
 
-func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *http.Request, key string) {
+func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := procBody(w, r)
 	if err != nil {
 		return
@@ -71,19 +72,19 @@ func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *h
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
-    key += processTags(req.Tags)	
+	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Gauge(key, req.Value)
 }
 
 type TimingRequest struct {
+	Metric	string `json:"metric"`
 	Value int64    `json:"value,omitempty"`
 	Tags     string `json:"tags,omitempty"`
 	SampleRate float64 `json:"sampleRate"`
 }
 
-func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *http.Request, key string) {
+func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := procBody(w, r)
 	if err != nil {
 		return
@@ -94,8 +95,7 @@ func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
-    key += processTags(req.Tags)	
+	var key = req.Metric + processTags(req.Tags)
 
 	var sampleRate float64 = 1
 	if req.SampleRate != 0 {
@@ -107,11 +107,12 @@ func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *
 }
 
 type SetRequest struct {
+	Metric	string `json:"metric"`
 	Value int `json:"value,omitempty"`
 	Tags  string `json:"tags,omitempty"`
 }
 
-func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *http.Request, key string) {
+func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := procBody(w, r)
 	if err != nil {
 		return
@@ -122,8 +123,7 @@ func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *htt
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
-    key += processTags(req.Tags)	
+	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Set(key, req.Value)
 }

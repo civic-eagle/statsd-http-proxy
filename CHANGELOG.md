@@ -1,3 +1,13 @@
+## 1.3.1
+  * Vendor updates
+
+## 1.3
+  * Go 1.18
+
+## 1.2
+  * Bump vendoring for jwt (fixes bugs in implementation)
+  * merged changes from multiple projects
+
 ## 1.1
   * pull vendoring into local repo
   * build against Go 1.17

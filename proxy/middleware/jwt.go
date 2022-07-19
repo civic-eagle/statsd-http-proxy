@@ -29,6 +29,7 @@ func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {
 			if tokenString == "" {
 				log.Error("Token not specified")
 				http.Error(w, "Token not specified", 401)
+				JwtMissingToken.Inc()
 				return
 			}
 
@@ -44,6 +45,7 @@ func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {
 			if err != nil {
 				log.Error("Error parsing token")
 				http.Error(w, "Error parsing token", 403)
+				JwtBadToken.Inc()
 				return
 			}
 

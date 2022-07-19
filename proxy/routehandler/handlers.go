@@ -18,7 +18,8 @@ type CountRequest struct {
 	SampleRate float64 `json:"sampleRate"`
 }
 
-const maxBodySize = 2000 * 1024 * 1024
+// 5 MB
+const maxBodySize = 5000 * 1024 * 1024
 
 func procBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
@@ -53,6 +54,7 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 		sampleRate = float64(req.SampleRate)
 	}
 	routeHandler.statsdClient.Count(key, req.Value, float32(sampleRate))
+	CountersAdded.Inc()
 }
 
 type GaugeRequest struct {
@@ -75,6 +77,7 @@ func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *h
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Gauge(key, req.Value)
+	GaugesAdded.Inc()
 }
 
 type TimingRequest struct {
@@ -102,8 +105,8 @@ func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *
 		sampleRate = float64(req.SampleRate)
 	}
 
-
 	routeHandler.statsdClient.Timing(key, req.Value, float32(sampleRate))
+	TimingAdded.Inc()
 }
 
 type SetRequest struct {
@@ -126,6 +129,7 @@ func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *htt
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Set(key, req.Value)
+	SetAdded.Inc()
 }
 
 func processTags(tagsList string) string {

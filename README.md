@@ -107,13 +107,14 @@ Sample code to send metric in browser with JWT token in header:
 
 ```javascript
 $.ajax({
-    url: 'http://127.0.0.1:8080/count/some.key.name',
+    url: 'http://127.0.0.1:8080/count/',
     method: 'POST',
     headers: {
         'X-JWT-Token': 'some-jwt-token'
         'Content-Type': 'application/json'
     },
     data: {
+        metric: 'some.key.name',
         value: 100500
     }
 });
@@ -126,6 +127,7 @@ All metrics accept `tags` as comma-separated key=value pairs (InfluxDB tag forma
 
 ```javascript
 data: {
+    metric: 'some.key.name',
     value: 100500,
     tags: 'env=prod,locale=en-us'
 }

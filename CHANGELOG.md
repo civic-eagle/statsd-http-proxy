@@ -1,3 +1,7 @@
+## 1.4 (dev)
+  * metric names in message body
+  * `/metrics` endpoint for prometheus-style stats tracking of proxy
+
 ## 1.3.1
   * Vendor updates
 

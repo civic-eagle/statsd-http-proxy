@@ -24,7 +24,7 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
-		"/:type/:key",
+		"/:type/",
 		middleware.ValidateCORS(
 			middleware.ValidateJWT(
 				http.HandlerFunc(
@@ -32,9 +32,8 @@ func NewHTTPRouter(
 						// get variables from path
 						params := httprouter.ParamsFromContext(r.Context())
 						metricType := params.ByName("type")
-						metricKeySuffix := params.ByName("key")
 
-						routeHandler.HandleMetric(w, r, metricType, metricKeySuffix)
+						routeHandler.HandleMetric(w, r, metricType)
 					},
 				),
 				tokenSecret,

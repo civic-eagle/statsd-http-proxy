@@ -28,11 +28,11 @@ var BuildUser = "Unknown"
 // HTTP connection params
 const defaultHTTPHost = "127.0.0.1"
 const defaultHTTPPort = 8825
-const defaultHTTPReadTimeout = 1
-const defaultHTTPWriteTimeout = 1
-const defaultHTTPIdleTimeout = 1
-const defaultStatsHTTPHost = "127.0.0.1"
-const defaultStatsHTTPPort = "9991"
+const defaultHTTPReadTimeout = 2
+const defaultHTTPWriteTimeout = 2
+const defaultHTTPIdleTimeout = 5
+const defaultPromHost = "127.0.0.1"
+const defaultPromPort = 9991
 
 // StatsD connection params
 const defaultStatsDHost = "127.0.0.1"
@@ -42,15 +42,17 @@ func main() {
 	// declare command line options
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
-	var httpHost = flag.String("http-host", defaultHTTPHost, "HTTP Host")
+	var httpHost = flag.String("http-host", defaultHTTPHost, "HTTP listening address")
 	var httpPort = flag.Int("http-port", defaultHTTPPort, "HTTP Port")
 	var httpReadTimeout = flag.Int("http-timeout-read", defaultHTTPReadTimeout, "The maximum duration in seconds for reading the entire request, including the body")
 	var httpWriteTimeout = flag.Int("http-timeout-write", defaultHTTPWriteTimeout, "The maximum duration in seconds before timing out writes of the response")
 	var httpIdleTimeout = flag.Int("http-timeout-idle", defaultHTTPIdleTimeout, "The maximum amount of time in seconds to wait for the next request when keep-alives are enabled")
 	var tlsCert = flag.String("tls-cert", "", "TLS certificate to enable HTTPS")
 	var tlsKey = flag.String("tls-key", "", "TLS private key  to enable HTTPS")
-	var statsdHost = flag.String("statsd-host", defaultStatsDHost, "StatsD Host")
+	var statsdHost = flag.String("statsd-host", defaultStatsDHost, "StatsD listening address")
 	var statsdPort = flag.Int("statsd-port", defaultStatsDPort, "StatsD Port")
+	var promHost = flag.String("prometheus-host", defaultPromHost, "Prometheus client listening Address")
+	var promPort = flag.Int("prometheus-port", defaultPromPort, "Prometheus client Port")
 	var metricPrefix = flag.String("metric-prefix", "", "Prefix of metric name")
 	var tokenSecret = flag.String("jwt-secret", "", "Secret to encrypt JWT")
 	var verbose = flag.Bool("verbose", false, "Verbose")
@@ -86,7 +88,7 @@ func main() {
 			log.Info(http.ListenAndServe(profilerHTTPAddress, nil))
 		}()
 	}
-	go stats.StatsListener(defaultStatsHTTPHost, defaultStatsHTTPPort)
+	go stats.StatsListener(*promHost, fmt.Sprintf("%d", *promPort))
 
 	// start proxy server
 	proxyServer := proxy.NewServer(

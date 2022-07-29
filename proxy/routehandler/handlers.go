@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/civic-eagle/statsd-http-proxy/proxy/stats"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,7 +55,7 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 		sampleRate = float64(req.SampleRate)
 	}
 	routeHandler.statsdClient.Count(key, req.Value, float32(sampleRate))
-	CountersAdded.Inc()
+	stats.CountersAdded.Inc()
 }
 
 type GaugeRequest struct {
@@ -77,7 +78,7 @@ func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *h
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Gauge(key, req.Value)
-	GaugesAdded.Inc()
+	stats.GaugesAdded.Inc()
 }
 
 type TimingRequest struct {
@@ -106,7 +107,7 @@ func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *
 	}
 
 	routeHandler.statsdClient.Timing(key, req.Value, float32(sampleRate))
-	TimingAdded.Inc()
+	stats.TimingAdded.Inc()
 }
 
 type SetRequest struct {
@@ -129,7 +130,7 @@ func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *htt
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Set(key, req.Value)
-	SetAdded.Inc()
+	stats.SetAdded.Inc()
 }
 
 func processTags(tagsList string) string {

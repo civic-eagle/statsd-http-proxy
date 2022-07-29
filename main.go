@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/stats"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,7 +32,7 @@ const defaultHTTPReadTimeout = 1
 const defaultHTTPWriteTimeout = 1
 const defaultHTTPIdleTimeout = 1
 const defaultStatsHTTPHost = "127.0.0.1"
-const defaultStatsHTTPPort = 9991
+const defaultStatsHTTPPort = "9991"
 
 // StatsD connection params
 const defaultStatsDHost = "127.0.0.1"
@@ -85,7 +86,7 @@ func main() {
 			log.Info(http.ListenAndServe(profilerHTTPAddress, nil))
 		}()
 	}
-	go StatsListener(defaultStatsHTTPHost, defaultStatsHTTPPort)
+	go stats.StatsListener(defaultStatsHTTPHost, defaultStatsHTTPPort)
 
 	// start proxy server
 	proxyServer := proxy.NewServer(

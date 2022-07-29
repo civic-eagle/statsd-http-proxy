@@ -1,4 +1,4 @@
-package proxy
+package stats
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ var (
 	TimingAdded = metrics.NewCounter("timing_added_total")
 	SetAdded = metrics.NewCounter("set_added_total")
 
-	JwtMissingToken = metrics.NewCount("auth_reqs_without_token_total")
-	JwtBadToken = metrics.NewCount("auth_reqs_bad_token_total")
+	JwtMissingToken = metrics.NewCounter("auth_reqs_without_token_total")
+	JwtBadToken = metrics.NewCounter("auth_reqs_bad_token_total")
 
 	//Uptime : since app start
 	Uptime = metrics.NewGauge("app_uptime_secs_total",

@@ -31,17 +31,16 @@ func (routeHandler *RouteHandler) HandleMetric(
 	w http.ResponseWriter,
 	r *http.Request,
 	metricType string,
-	metricKey string,
 ) {
 	switch metricType {
 	case "count":
-		routeHandler.handleCountRequest(w, r, metricKey)
+		routeHandler.handleCountRequest(w, r)
 	case "gauge":
-		routeHandler.handleGaugeRequest(w, r, metricKey)
+		routeHandler.handleGaugeRequest(w, r)
 	case "timing":
-		routeHandler.handleTimingRequest(w, r, metricKey)
+		routeHandler.handleTimingRequest(w, r)
 	case "set":
-		routeHandler.handleSetRequest(w, r, metricKey)
+		routeHandler.handleSetRequest(w, r)
 	}
 }
 

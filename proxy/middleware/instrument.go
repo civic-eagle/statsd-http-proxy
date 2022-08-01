@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/urfave/negroni"
@@ -21,12 +22,10 @@ func Instrument(h http.Handler) http.Handler {
 			// Start the timer and when finishing measure the duration.
 			start := time.Now()
 			defer func() {
-				code := lrw.Status()
+				code := strconv.Itoa(lrw.Status())
 				reqStr := fmt.Sprintf("http_requests_total{method=%q,path=%q,status_code=%q}", method, path, code)
-				//reqStr := fmt.Sprintf("http_requests_total{method=%q,path=%q}", method, path)
 				vmmetrics.GetOrCreateCounter(reqStr).Inc()
 				takenStr := fmt.Sprintf("http_request_time_secs_total{method=%q,path=%q,status_code=%q}", method, path, code)
-				//takenStr := fmt.Sprintf("http_request_time_secs_total{method=%q,path=%q}", method, path)
 				vmmetrics.GetOrCreateSummary(takenStr).UpdateDuration(start)
 			}()
 			h.ServeHTTP(lrw, r)

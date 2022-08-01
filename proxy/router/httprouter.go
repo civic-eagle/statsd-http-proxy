@@ -23,62 +23,53 @@ func NewHTTPRouter(
 	router.Handler(
 		http.MethodGet,
 		"/heartbeat",
-		middleware.ProxyCleanup(
-			middleware.Instrument(
-				middleware.ValidateCORS(
-					http.HandlerFunc(
-						routeHandler.HandleHeartbeatRequest,
-					),
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				http.HandlerFunc(
+					routeHandler.HandleHeartbeatRequest,
 				),
 			),
-			proxyPath,
 		),
 	)
 
 	router.Handler(
 		http.MethodGet,
 		"/metrics",
-		middleware.ProxyCleanup(
-			middleware.Instrument(
-				middleware.ValidateCORS(
-					http.HandlerFunc(
-						func(w http.ResponseWriter, r *http.Request) {
-							vmmetrics.WritePrometheus(w, true)
-						},
-					),
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				http.HandlerFunc(
+					func(w http.ResponseWriter, r *http.Request) {
+						vmmetrics.WritePrometheus(w, true)
+					},
 				),
 			),
-			proxyPath,
 		),
 	)
 
 	router.Handler(
 		http.MethodPost,
 		"/:type/",
-		middleware.ProxyCleanup(
-			middleware.Instrument(
-				middleware.ValidateCORS(
-					middleware.ValidateJWT(
-						http.HandlerFunc(
-							func(w http.ResponseWriter, r *http.Request) {
-								// get variables from path
-								params := httprouter.ParamsFromContext(r.Context())
-								metricType := params.ByName("type")
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricType := params.ByName("type")
 
-								routeHandler.HandleMetric(w, r, metricType)
-							},
-						),
-						tokenSecret,
+							routeHandler.HandleMetric(w, r, metricType)
+						},
 					),
+					tokenSecret,
 				),
 			),
-			proxyPath,
 		),
 	)
 
 	// Handle pre-flight CORS requests
 	router.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.WithFields(log.Fields{"path": r.URL.Path}).Info("Pre-flight function")
+		log.WithFields(log.Fields{"path": r.URL.Path}).Debug("Pre-flight function")
 		if r.Header.Get("Access-Control-Request-Method") == "" {
 			return
 		}

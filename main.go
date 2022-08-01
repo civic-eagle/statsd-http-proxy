@@ -92,7 +92,7 @@ func main() {
 		profilerHTTPAddress := fmt.Sprintf("localhost:%d", *profilerHTTPort)
 		go func() {
 			log.WithFields(log.Fields{"Address": profilerHTTPAddress}).Info("Profiler started")
-			log.WithFields(log.Fields{}).Info(fmt.Sprintf("Open 'http://" + profilerHTTPAddress + "/debug/pprof/' in you browser or use 'go tool pprof http://" + profilerHTTPAddress + "/debug/pprof/heap' from console"))
+			log.Info(fmt.Sprintf("Open 'http://%s/debug/pprof/' in you browser or use 'go tool pprof http://%s/debug/pprof/heap' from console", profilerHTTPAddress, profilerHTTPAddress))
 			log.Info("See details about pprof in https://golang.org/pkg/net/http/pprof/")
 			log.Info(http.ListenAndServe(profilerHTTPAddress, nil))
 		}()

@@ -40,14 +40,18 @@ const defaultStatsDPort = 8125
 const defaultProxyPath = ""
 
 func main() {
-	// declare command line options
+	// metric instantiation (for global metrics we always want to see)
 	startTime := time.Now()
 	_ = vmmetrics.NewGauge("app_uptime_secs_total",
 		func() float64 {
 			return float64(time.Since(startTime).Seconds())
 		})
+
+	// logging configuration
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
+
+	// declare command line options
 	var httpHost = flag.String("http-host", defaultHTTPHost, "HTTP listening address")
 	var httpPort = flag.Int("http-port", defaultHTTPPort, "HTTP Port")
 	var httpReadTimeout = flag.Int("http-timeout-read", defaultHTTPReadTimeout, "The maximum duration in seconds for reading the entire request, including the body")

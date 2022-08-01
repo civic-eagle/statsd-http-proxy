@@ -24,9 +24,11 @@ func NewHTTPRouter(
 	router.Handler(
 		http.MethodGet,
 		"/heartbeat",
-		middleware.ValidateCORS(
-			http.HandlerFunc(
-				routeHandler.HandleHeartbeatRequest,
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				http.HandlerFunc(
+					routeHandler.HandleHeartbeatRequest,
+				),
 			),
 		),
 	)
@@ -34,12 +36,13 @@ func NewHTTPRouter(
 	router.Handler(
 		http.MethodGet,
 		"/metrics",
-
-		middleware.ValidateCORS(
-			http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					vmmetrics.WritePrometheus(w, true)
-				},
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				http.HandlerFunc(
+					func(w http.ResponseWriter, r *http.Request) {
+						vmmetrics.WritePrometheus(w, true)
+					},
+				),
 			),
 		),
 	)
@@ -47,18 +50,20 @@ func NewHTTPRouter(
 	router.Handler(
 		http.MethodPost,
 		"/:type/",
-		middleware.ValidateCORS(
-			middleware.ValidateJWT(
-				http.HandlerFunc(
-					func(w http.ResponseWriter, r *http.Request) {
-						// get variables from path
-						params := httprouter.ParamsFromContext(r.Context())
-						metricType := params.ByName("type")
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricType := params.ByName("type")
 
-						routeHandler.HandleMetric(w, r, metricType)
-					},
+							routeHandler.HandleMetric(w, r, metricType)
+						},
+					),
+					tokenSecret,
 				),
-				tokenSecret,
 			),
 		),
 	)

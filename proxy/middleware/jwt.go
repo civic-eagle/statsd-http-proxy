@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/civic-eagle/statsd-http-proxy/proxy/stats"
 	"github.com/golang-jwt/jwt"
 	log "github.com/sirupsen/logrus"
+    vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 const jwtQueryStringKeyName = "token"
@@ -30,7 +30,7 @@ func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {
 			if tokenString == "" {
 				log.Error("Token not specified")
 				http.Error(w, "Token not specified", 401)
-				stats.JwtMissingToken.Inc()
+				vmmetrics.GetOrCreateCounter("auth_reqs_without_token_total").Inc()
 				return
 			}
 
@@ -46,7 +46,7 @@ func ValidateJWT(next http.Handler, tokenSecret string) http.Handler {
 			if err != nil {
 				log.Error("Error parsing token")
 				http.Error(w, "Error parsing token", 403)
-				stats.JwtBadToken.Inc()
+				vmmetrics.GetOrCreateCounter("auth_reqs_bad_token_total").Inc()
 				return
 			}
 

@@ -7,9 +7,10 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"runtime"
+	"time"
 
+	vmmetrics "github.com/VictoriaMetrics/metrics"
 	"github.com/civic-eagle/statsd-http-proxy/proxy"
-	"github.com/civic-eagle/statsd-http-proxy/proxy/stats"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,15 +32,20 @@ const defaultHTTPPort = 8825
 const defaultHTTPReadTimeout = 2
 const defaultHTTPWriteTimeout = 2
 const defaultHTTPIdleTimeout = 5
-const defaultPromHost = "127.0.0.1"
-const defaultPromPort = 9991
 
 // StatsD connection params
 const defaultStatsDHost = "127.0.0.1"
 const defaultStatsDPort = 8125
 
+const defaultProxyPath = ""
+
 func main() {
 	// declare command line options
+	startTime := time.Now()
+	_ = vmmetrics.NewGauge("app_uptime_secs_total",
+		func() float64 {
+			return float64(time.Since(startTime).Seconds())
+		})
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 	var httpHost = flag.String("http-host", defaultHTTPHost, "HTTP listening address")
@@ -51,8 +57,7 @@ func main() {
 	var tlsKey = flag.String("tls-key", "", "TLS private key  to enable HTTPS")
 	var statsdHost = flag.String("statsd-host", defaultStatsDHost, "StatsD listening address")
 	var statsdPort = flag.Int("statsd-port", defaultStatsDPort, "StatsD Port")
-	var promHost = flag.String("prometheus-host", defaultPromHost, "Prometheus client listening Address")
-	var promPort = flag.Int("prometheus-port", defaultPromPort, "Prometheus client Port")
+	var proxyPath = flag.String("proxy-path", defaultProxyPath, "Prefix to remove from proxied messages (for proxies that don't strip prefixes)")
 	var metricPrefix = flag.String("metric-prefix", "", "Prefix of metric name")
 	var tokenSecret = flag.String("jwt-secret", "", "Secret to encrypt JWT")
 	var verbose = flag.Bool("verbose", false, "Verbose")
@@ -88,7 +93,7 @@ func main() {
 			log.Info(http.ListenAndServe(profilerHTTPAddress, nil))
 		}()
 	}
-	go stats.StatsListener(*promHost, fmt.Sprintf("%d", *promPort))
+	//go metrics.MetricsListener(*promHost, fmt.Sprintf("%d", *promPort))
 
 	// start proxy server
 	proxyServer := proxy.NewServer(
@@ -99,6 +104,7 @@ func main() {
 		*httpIdleTimeout,
 		*statsdHost,
 		*statsdPort,
+		*proxyPath,
 		*tlsCert,
 		*tlsKey,
 		*metricPrefix,

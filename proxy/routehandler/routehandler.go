@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
+	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 // RouteHandler as a collection of route handlers
@@ -46,4 +47,5 @@ func (routeHandler *RouteHandler) HandleMetric(
 
 func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
+	vmmetrics.GetOrCreateCounter(`http_requests_total{endpoint="/heartbeat",method="GET",status_code="200"}`).Inc()
 }

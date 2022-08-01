@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/civic-eagle/statsd-http-proxy/proxy/stats"
 	log "github.com/sirupsen/logrus"
+    vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 type CountRequest struct {
@@ -55,7 +55,7 @@ func (routeHandler *RouteHandler) handleCountRequest(w http.ResponseWriter, r *h
 		sampleRate = float64(req.SampleRate)
 	}
 	routeHandler.statsdClient.Count(key, req.Value, float32(sampleRate))
-	stats.CountersAdded.Inc()
+	vmmetrics.GetOrCreateCounter("counters_added_total").Inc()
 }
 
 type GaugeRequest struct {
@@ -78,7 +78,7 @@ func (routeHandler *RouteHandler) handleGaugeRequest(w http.ResponseWriter, r *h
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Gauge(key, req.Value)
-	stats.GaugesAdded.Inc()
+	vmmetrics.GetOrCreateCounter("gauges_added_total").Inc()
 }
 
 type TimingRequest struct {
@@ -107,7 +107,7 @@ func (routeHandler *RouteHandler) handleTimingRequest(w http.ResponseWriter, r *
 	}
 
 	routeHandler.statsdClient.Timing(key, req.Value, float32(sampleRate))
-	stats.TimingAdded.Inc()
+	vmmetrics.GetOrCreateCounter("timing_added_total").Inc()
 }
 
 type SetRequest struct {
@@ -130,7 +130,7 @@ func (routeHandler *RouteHandler) handleSetRequest(w http.ResponseWriter, r *htt
 	var key = req.Metric + processTags(req.Tags)
 
 	routeHandler.statsdClient.Set(key, req.Value)
-	stats.SetAdded.Inc()
+	vmmetrics.GetOrCreateCounter("set_added_total").Inc()
 }
 
 func processTags(tagsList string) string {

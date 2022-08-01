@@ -2,15 +2,19 @@ package router
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
 	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
 	"github.com/julienschmidt/httprouter"
+	log "github.com/sirupsen/logrus"
+	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 // NewHTTPRouter creates julienschmidt's HTTP router
 func NewHTTPRouter(
 	routeHandler *routehandler.RouteHandler,
+	proxyPath string,
 	tokenSecret string,
 ) http.Handler {
 	// build router
@@ -20,7 +24,25 @@ func NewHTTPRouter(
 	router.Handler(
 		http.MethodGet,
 		"/heartbeat",
-		middleware.ValidateCORS(http.HandlerFunc(routeHandler.HandleHeartbeatRequest)))
+		middleware.ValidateCORS(
+			http.HandlerFunc(
+				routeHandler.HandleHeartbeatRequest,
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodGet,
+		"/metrics",
+
+		middleware.ValidateCORS(
+			http.HandlerFunc(
+				func(w http.ResponseWriter, r *http.Request) {
+					vmmetrics.WritePrometheus(w, true)
+				},
+			),
+		),
+	)
 
 	router.Handler(
 		http.MethodPost,
@@ -43,10 +65,17 @@ func NewHTTPRouter(
 
 	// Handle pre-flight CORS requests
 	router.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.WithFields(log.Fields{"path": r.URL.Path}).Info("Pre-flight function")
 		if r.Header.Get("Access-Control-Request-Method") == "" {
 			return
 		}
 
+		// if we have a proxy that doesn't remove proxy paths, define the path to remove
+		if proxyPath != "" {
+			r.URL.Path = strings.TrimPrefix(r.URL.Path, proxyPath)
+			log.WithFields(log.Fields{"Prefix": proxyPath, "URL": r.URL.Path}).Debug("Trimmed proxy path")
+		}
+		// pathMetric := fmt.Sprintf(`http_requests_total{path=%q,
 		origin := r.Header.Get("Origin")
 		if origin != "" {
 			w.Header().Add("Access-Control-Allow-Origin", origin)

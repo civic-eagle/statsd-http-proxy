@@ -33,6 +33,7 @@ func NewServer(
 	httpIdleTimeout int,
 	statsdHost string,
 	statsdPort int,
+	proxyPath string,
 	tlsCert string,
 	tlsKey string,
 	metricPrefix string,
@@ -54,7 +55,7 @@ func NewServer(
 	)
 
 	// build router
-	httpServerHandler := router.NewHTTPRouter(routeHandler, tokenSecret)
+	httpServerHandler := router.NewHTTPRouter(routeHandler, proxyPath, tokenSecret)
 
 	// get HTTP server address to bind
 	httpAddress := fmt.Sprintf("%s:%d", httpHost, httpPort)

@@ -7,6 +7,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	vmmetrics "github.com/VictoriaMetrics/metrics"
@@ -97,7 +98,6 @@ func main() {
 			log.Info(http.ListenAndServe(profilerHTTPAddress, nil))
 		}()
 	}
-	//go metrics.MetricsListener(*promHost, fmt.Sprintf("%d", *promPort))
 
 	// start proxy server
 	proxyServer := proxy.NewServer(
@@ -108,7 +108,7 @@ func main() {
 		*httpIdleTimeout,
 		*statsdHost,
 		*statsdPort,
-		*proxyPath,
+		strings.TrimSuffix(strings.TrimPrefix(*proxyPath, "/"), "/"),
 		*tlsCert,
 		*tlsKey,
 		*metricPrefix,

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
@@ -18,11 +19,17 @@ func NewHTTPRouter(
 ) http.Handler {
 	// build router
 	router := httprouter.New()
+	var rootPath string
+	if proxyPath != "" && proxyPath != "/" {
+		rootPath = fmt.Sprintf("/%s", proxyPath)
+	} else {
+		rootPath = ""
+	}
 
 	// register http request handlers
 	router.Handler(
 		http.MethodGet,
-		"/heartbeat",
+		fmt.Sprintf("%s/heartbeat", rootPath),
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				http.HandlerFunc(
@@ -34,7 +41,7 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodGet,
-		"/metrics",
+		fmt.Sprintf("%s/metrics", rootPath),
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				http.HandlerFunc(
@@ -48,7 +55,7 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
-		"/:type/",
+		fmt.Sprintf("%s/:type", rootPath),
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				middleware.ValidateJWT(

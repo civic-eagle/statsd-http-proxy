@@ -36,6 +36,7 @@ func NewHTTPRouter(
 					routeHandler.HandleHeartbeatRequest,
 				),
 			),
+			rootPath,
 		),
 	)
 
@@ -50,6 +51,7 @@ func NewHTTPRouter(
 					},
 				),
 			),
+			rootPath,
 		),
 	)
 
@@ -71,6 +73,7 @@ func NewHTTPRouter(
 					tokenSecret,
 				),
 			),
+			rootPath,
 		),
 	)
 

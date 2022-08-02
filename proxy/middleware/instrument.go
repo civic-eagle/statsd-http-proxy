@@ -4,19 +4,23 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 // Handler returns an measuring standard http.Handler.
-func Instrument(h http.Handler) http.Handler {
+func Instrument(h http.Handler, proxyPrefix string) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// get the path for labelling
 			lrw := negroni.NewResponseWriter(w)
-			path := r.URL.Path
+			log.WithFields(log.Fields{"prefix": proxyPrefix, "url": r.URL.Path}).Debug("Path To process")
+			path := strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s", proxyPrefix))
+			log.WithFields(log.Fields{"result": path}).Debug("Final path to write in metric name")
 			method := r.Method
 
 			// Start the timer and when finishing measure the duration.

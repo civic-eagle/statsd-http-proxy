@@ -99,6 +99,9 @@ func main() {
 		}()
 	}
 
+	proxyPrefix := strings.TrimSuffix(strings.TrimPrefix(*proxyPath, "/"), "/")
+	log.WithFields(log.Fields{"proxyPrefix": proxyPrefix}).Debug("Prefix for all incoming messages")
+
 	// start proxy server
 	proxyServer := proxy.NewServer(
 		*httpHost,
@@ -108,7 +111,7 @@ func main() {
 		*httpIdleTimeout,
 		*statsdHost,
 		*statsdPort,
-		strings.TrimSuffix(strings.TrimPrefix(*proxyPath, "/"), "/"),
+		proxyPrefix,
 		*tlsCert,
 		*tlsKey,
 		*metricPrefix,

@@ -19,8 +19,8 @@ func Instrument(h http.Handler, proxyPrefix string) http.Handler {
 			lrw := negroni.NewResponseWriter(w)
 			var path string
 			if proxyPrefix != "" && proxyPrefix != "/" {
-				h = http.StripPrefix(fmt.Sprintf("/%s", proxyPrefix), h)
-				path = strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s", proxyPrefix))
+				h = http.StripPrefix(proxyPrefix, h)
+				path = strings.TrimPrefix(r.URL.Path, proxyPrefix)
 			} else {
 				path = r.URL.Path
 			}

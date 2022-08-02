@@ -25,6 +25,9 @@ func NewHTTPRouter(
 	} else {
 		rootPath = ""
 	}
+	log.WithFields(log.Fields{"heartbeat": fmt.Sprintf("%s/heartbeat", rootPath)}).Debug("heartbeat route")
+	log.WithFields(log.Fields{"metrics": fmt.Sprintf("%s/metrics", rootPath)}).Debug("metrics route")
+	log.WithFields(log.Fields{"stats": fmt.Sprintf("%s/:type", rootPath)}).Debug("actual stats routes")
 
 	// register http request handlers
 	router.Handler(

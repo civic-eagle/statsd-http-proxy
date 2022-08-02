@@ -25,7 +25,7 @@ func TestValidateInstrumentationWithoutProxy(t *testing.T) {
 
 func TestValidateInstrumentationWithProxy(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-	h := Instrument(nextHandler, "statsd")
+	h := Instrument(nextHandler, "/statsd")
 	request := httptest.NewRequest("GET", "http://testing/statsd/healthcheck", nil)
 	responseWriter := httptest.NewRecorder()
 	h.ServeHTTP(responseWriter, request)
@@ -39,7 +39,7 @@ func TestValidateInstrumentationWithProxy(t *testing.T) {
 
 func TestValidateInstrumentationWithProxyBadPath(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-	h := Instrument(nextHandler, "statsd")
+	h := Instrument(nextHandler, "/statsd")
 	request := httptest.NewRequest("GET", "http://testing/healthcheck", nil)
 	responseWriter := httptest.NewRecorder()
 	h.ServeHTTP(responseWriter, request)

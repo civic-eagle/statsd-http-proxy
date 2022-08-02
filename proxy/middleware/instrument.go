@@ -19,6 +19,7 @@ func Instrument(h http.Handler, proxyPrefix string) http.Handler {
 			// get the path for labelling
 			lrw := negroni.NewResponseWriter(w)
 			log.WithFields(log.Fields{"prefix": proxyPrefix, "url": r.URL.Path}).Debug("Path To process")
+			// the prefix is already formatted in the calling function, so we can just leverage it here
 			path := strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s", proxyPrefix))
 			log.WithFields(log.Fields{"result": path}).Debug("Final path to write in metric name")
 			method := r.Method

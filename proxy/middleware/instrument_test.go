@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,7 +35,6 @@ func TestValidateInstrumentationWithProxy(t *testing.T) {
 	rt.Equal(http.StatusOK, response.StatusCode)
 	metrics := vmmetrics.ListMetricNames()
 	rt.Equal(7, len(metrics))
-	fmt.Println(metrics)
 }
 
 func TestValidateInstrumentationWithProxyBadPath(t *testing.T) {
@@ -51,5 +49,6 @@ func TestValidateInstrumentationWithProxyBadPath(t *testing.T) {
 	// root path shouldn't work now
 	rt.Equal(http.StatusNotFound, response.StatusCode)
 	metrics := vmmetrics.ListMetricNames()
-	rt.Equal(7, len(metrics))
+	// should return new stats for a 404 code, so duplicate all stats
+	rt.Equal(14, len(metrics))
 }

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
@@ -20,10 +19,8 @@ func Instrument(h http.Handler, proxyPrefix string) http.Handler {
 			lrw := negroni.NewResponseWriter(w)
 			var path string
 			if proxyPrefix != "" && proxyPrefix != "/" {
-				log.WithFields(log.Fields{"prefix": proxyPrefix, "url": r.URL.Path}).Debug("Path To process")
-				// the prefix is already formatted in the calling function, so we can just leverage it here
+				h = http.StripPrefix(fmt.Sprintf("/%s", proxyPrefix), h)
 				path = strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s", proxyPrefix))
-				log.WithFields(log.Fields{"result": path}).Debug("Final path to write in metric name")
 			} else {
 				path = r.URL.Path
 			}

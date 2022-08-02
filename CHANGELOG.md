@@ -1,4 +1,8 @@
-## 1.4 (dev)
+## 1.5 (dev)
+  * middleware to get better prometheus stat generation (RED/etc.)
+  * handle proxy prefixes (convert `/statsd/count` to `/count` for routing)
+
+## 1.4
   * metric names in message body
   * `/metrics` endpoint for prometheus-style stats tracking of proxy
 

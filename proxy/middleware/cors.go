@@ -1,6 +1,8 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // validate CORS headers
 func ValidateCORS(next http.Handler) http.Handler {

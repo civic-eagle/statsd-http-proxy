@@ -1,12 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	//vmmetrics "github.com/VictoriaMetrics/metrics"
+	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
 
 func TestValidateInstrumentationWithoutProxy(t *testing.T) {
@@ -19,7 +20,8 @@ func TestValidateInstrumentationWithoutProxy(t *testing.T) {
 	rt := require.New(t)
 
 	rt.Equal(http.StatusOK, response.StatusCode)
-	// need to validate that resultant metrics are what we expect
+	metrics := vmmetrics.ListMetricNames()
+	rt.Equal(7, len(metrics))
 }
 
 func TestValidateInstrumentationWithProxy(t *testing.T) {
@@ -32,7 +34,9 @@ func TestValidateInstrumentationWithProxy(t *testing.T) {
 	rt := require.New(t)
 
 	rt.Equal(http.StatusOK, response.StatusCode)
-	// need to validate that resultant metrics are what we expect
+	metrics := vmmetrics.ListMetricNames()
+	rt.Equal(7, len(metrics))
+	fmt.Println(metrics)
 }
 
 func TestValidateInstrumentationWithProxyBadPath(t *testing.T) {
@@ -46,4 +50,6 @@ func TestValidateInstrumentationWithProxyBadPath(t *testing.T) {
 
 	// root path shouldn't work now
 	rt.Equal(http.StatusNotFound, response.StatusCode)
+	metrics := vmmetrics.ListMetricNames()
+	rt.Equal(7, len(metrics))
 }

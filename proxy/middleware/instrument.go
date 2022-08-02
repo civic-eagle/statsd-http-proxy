@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/urfave/negroni"
@@ -12,18 +11,12 @@ import (
 )
 
 // Handler returns an measuring standard http.Handler.
-func Instrument(h http.Handler, proxyPrefix string) http.Handler {
+func Instrument(h http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			// get the path for labelling
 			lrw := negroni.NewResponseWriter(w)
-			var path string
-			if proxyPrefix != "" && proxyPrefix != "/" {
-				h = http.StripPrefix(proxyPrefix, h)
-				path = strings.TrimPrefix(r.URL.Path, proxyPrefix)
-			} else {
-				path = r.URL.Path
-			}
+			path := r.URL.Path
 			method := r.Method
 
 			// Start the timer and when finishing measure the duration.

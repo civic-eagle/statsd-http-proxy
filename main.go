@@ -7,7 +7,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	vmmetrics "github.com/VictoriaMetrics/metrics"
@@ -38,8 +37,6 @@ const defaultHTTPIdleTimeout = 5
 const defaultStatsDHost = "127.0.0.1"
 const defaultStatsDPort = 8125
 
-const defaultProxyPath = ""
-
 func main() {
 	// metric instantiation (for global metrics we always want to see)
 	startTime := time.Now()
@@ -62,7 +59,6 @@ func main() {
 	var tlsKey = flag.String("tls-key", "", "TLS private key  to enable HTTPS")
 	var statsdHost = flag.String("statsd-host", defaultStatsDHost, "StatsD listening address")
 	var statsdPort = flag.Int("statsd-port", defaultStatsDPort, "StatsD Port")
-	var proxyPath = flag.String("proxy-path", defaultProxyPath, "Prefix to remove from proxied messages (for proxies that don't strip prefixes)")
 	var metricPrefix = flag.String("metric-prefix", "", "Prefix of metric name")
 	var tokenSecret = flag.String("jwt-secret", "", "Secret to encrypt JWT")
 	var verbose = flag.Bool("verbose", false, "Verbose")
@@ -99,9 +95,6 @@ func main() {
 		}()
 	}
 
-	proxyPrefix := strings.TrimSuffix(strings.TrimPrefix(*proxyPath, "/"), "/")
-	log.WithFields(log.Fields{"proxyPrefix": proxyPrefix}).Debug("Prefix for all incoming messages")
-
 	// start proxy server
 	proxyServer := proxy.NewServer(
 		*httpHost,
@@ -111,7 +104,6 @@ func main() {
 		*httpIdleTimeout,
 		*statsdHost,
 		*statsdPort,
-		proxyPrefix,
 		*tlsCert,
 		*tlsKey,
 		*metricPrefix,

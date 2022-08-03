@@ -1,6 +1,7 @@
 package routehandler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -27,21 +28,54 @@ func NewRouteHandler(
 	return &routeHandler
 }
 
+
 func (routeHandler *RouteHandler) HandleMetric(
 	w http.ResponseWriter,
 	r *http.Request,
 	metricType string,
 ) {
-	switch metricType {
-	case "count":
-		routeHandler.handleCountRequest(w, r)
-	case "gauge":
-		routeHandler.handleGaugeRequest(w, r)
-	case "timing":
-		routeHandler.handleTimingRequest(w, r)
-	case "set":
-		routeHandler.handleSetRequest(w, r)
+	body, err := procBody(w, r)
+	if err != nil {
+		return
 	}
+	var req MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	var key = req.Metric + processTags(req.Tags)
+
+	var sampleRate float64 = 1
+	if req.SampleRate != 0 {
+		sampleRate = float64(req.SampleRate)
+	}
+
+	sendMetric(routeHandler, metricType, key, req.Value, float32(sampleRate))
+}
+
+func (routeHandler *RouteHandler) HandleMetricName(
+	w http.ResponseWriter,
+	r *http.Request,
+	metricType string,
+	metricName string,
+) {
+	body, err := procBody(w, r)
+	if err != nil {
+		return
+	}
+	var req MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	var key = metricName + processTags(req.Tags)
+
+	var sampleRate float64 = 1
+	if req.SampleRate != 0 {
+		sampleRate = float64(req.SampleRate)
+	}
+
+	sendMetric(routeHandler, metricType, key, req.Value, float32(sampleRate))
 }
 
 func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {

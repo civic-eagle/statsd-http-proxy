@@ -148,3 +148,25 @@ Adds timing to the bucket. Expected `value` as milliseconds integer. Default is 
 ### `set`
 
 Adds value in a set bucket. Expected `value` as string. Sets are a relatively new concept in recent versions of StatsD. Sets track the number of unique elements belonging to a group. At each flush interval, the statsd backend will push the number of unique elements in the set as a single gauge value.
+
+## Legacy Pattern
+
+You can also send metrics in using the legacy pattern:
+
+```javascript
+$.ajax({
+    url: 'http://127.0.0.1:8080/count/some.key.name',
+    method: 'POST',
+    headers: {
+        'X-JWT-Token': 'some-jwt-token'
+        'Content-Type': 'application/json'
+    },
+    data: {
+        value: 100500
+    }
+});
+```
+
+We define the metric name in the URL rather than the data object. This _does_ slightly restrict the allowed characters a metric name can have (because allowed URL characters are more limited).
+
+All other suggestions/requirements from above apply to metrics generated this way.

@@ -65,6 +65,27 @@ func NewHTTPRouter(
 		),
 	)
 
+	router.Handler(
+		http.MethodPost,
+		"/:type/:metric",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricType := params.ByName("type")
+							metricName := params.ByName("metric")
+							routeHandler.HandleMetricName(w, r, metricType, metricName)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
 	// Handle pre-flight CORS requests
 	router.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(log.Fields{"path": r.URL.Path}).Debug("Pre-flight function")

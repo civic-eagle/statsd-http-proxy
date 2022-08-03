@@ -1,7 +1,9 @@
-## 1.5 (dev)
+## 1.5.1
+  * allow for metric names in URLs _or_ in body
+
+## 1.5
   * middleware to get better prometheus stat generation (RED/etc.)
   * Golang 1.18.5
-  * allow for metric names in URLs _or_ in body
 
 ## 1.4
   * metric names in message body

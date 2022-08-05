@@ -1,7 +1,7 @@
 github.com/GoMetric/go-statsd-client v1.1.2 h1:kWoCOJ32Wgkfug+yLhhOCBA6G0t2ax0ntv27QyqoPn8=
 github.com/GoMetric/go-statsd-client v1.1.2/go.mod h1:B44qfLbrIFTm9+Xhqhep07th+soi+/t8g9HKwUvDlAk=
-github.com/VictoriaMetrics/metrics v1.20.1 h1:XqQbRKYzwkmo0DKKDbvp6V7upUqErlqd0vXPoeBsEbU=
-github.com/VictoriaMetrics/metrics v1.20.1/go.mod h1:ArjwVz7WpgpegX/JpB0zpNF2h2232kErkEnzH1sxMmA=
+github.com/VictoriaMetrics/metrics v1.21.0 h1:cjbToD4xrR+ZaDO49h2t67sdmmbCKfHfyTyAH3Sx+DM=
+github.com/VictoriaMetrics/metrics v1.21.0/go.mod h1:ArjwVz7WpgpegX/JpB0zpNF2h2232kErkEnzH1sxMmA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

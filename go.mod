@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/GoMetric/go-statsd-client v1.1.2
-	github.com/VictoriaMetrics/metrics v1.20.1
+	github.com/VictoriaMetrics/metrics v1.21.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/sirupsen/logrus v1.9.0

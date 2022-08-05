@@ -3,7 +3,6 @@ package routehandler
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -27,7 +26,7 @@ func procBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
 		return []byte(""), fmt.Errorf("Unsupported content type")
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return []byte(""), err

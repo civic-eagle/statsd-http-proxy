@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,7 +34,7 @@ func TestValidateJWTWithNoTokenInHeaderAndQuery(t *testing.T) {
 	handlerWithJWTValidation.ServeHTTP(responseWriter, request)
 
 	response := responseWriter.Result()
-	responseBody, _ := ioutil.ReadAll(response.Body)
+	responseBody, _ := io.ReadAll(response.Body)
 
 	require := require.New(t)
 
@@ -55,7 +55,7 @@ func TestValidateJWTWithInvalidTokenInHeader(t *testing.T) {
 	handlerWithJWTValidation.ServeHTTP(responseWriter, request)
 
 	response := responseWriter.Result()
-	responseBody, _ := ioutil.ReadAll(response.Body)
+	responseBody, _ := io.ReadAll(response.Body)
 
 	require := require.New(t)
 
@@ -76,7 +76,7 @@ func TestValidateJWTWithValidTokenInHeader(t *testing.T) {
 	handlerWithJWTValidation.ServeHTTP(responseWriter, request)
 
 	response := responseWriter.Result()
-	responseBody, _ := ioutil.ReadAll(response.Body)
+	responseBody, _ := io.ReadAll(response.Body)
 
 	require := require.New(t)
 
@@ -95,7 +95,7 @@ func TestValidateJWTWithInvalidTokenInQuery(t *testing.T) {
 	handlerWithJWTValidation.ServeHTTP(responseWriter, request)
 
 	response := responseWriter.Result()
-	responseBody, _ := ioutil.ReadAll(response.Body)
+	responseBody, _ := io.ReadAll(response.Body)
 
 	require := require.New(t)
 
@@ -114,7 +114,7 @@ func TestValidateJWTWithValidTokenInQuery(t *testing.T) {
 	handlerWithJWTValidation.ServeHTTP(responseWriter, request)
 
 	response := responseWriter.Result()
-	responseBody, _ := ioutil.ReadAll(response.Body)
+	responseBody, _ := io.ReadAll(response.Body)
 
 	require := require.New(t)
 

@@ -1,7 +1,6 @@
 package routehandler
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -34,13 +33,8 @@ func (routeHandler *RouteHandler) HandleMetric(
 	r *http.Request,
 	metricType string,
 ) {
-	body, err := procBody(w, r)
+	req, err := procBody(w, r)
 	if err != nil {
-		return
-	}
-	var req MetricRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), 400)
 		return
 	}
 	var key = req.Metric
@@ -62,13 +56,8 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	metricType string,
 	metricName string,
 ) {
-	body, err := procBody(w, r)
+	req, err := procBody(w, r)
 	if err != nil {
-		return
-	}
-	var req MetricRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), 400)
 		return
 	}
 	var key = metricName

@@ -2,6 +2,7 @@ package routehandler
 
 import (
 	"fmt"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -20,20 +21,26 @@ type MetricRequest struct {
 // 5 MB
 const maxBodySize = 5000 * 1024 * 1024
 
-func procBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+func procBody(w http.ResponseWriter, r *http.Request) (MetricRequest, error) {
 	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
 		http.Error(w, "Unsupported content type", 400)
-		return []byte(""), fmt.Errorf("Unsupported content type")
+		return MetricRequest{}, fmt.Errorf("Unsupported content type")
 	}
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	if err != nil {
 		http.Error(w, err.Error(), 400)
-		return []byte(""), err
+		return MetricRequest{}, err
 	}
 	r.Body.Close()
 
-	return body, nil
+	var req MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return MetricRequest{}, err
+	}
+
+	return req, nil
 }
 
 func processTags(tagsList string) string {

@@ -1,3 +1,6 @@
+## 1.5.2
+  * bug with empty tag list fixed
+
 ## 1.5.1
   * allow for metric names in URLs _or_ in body
 

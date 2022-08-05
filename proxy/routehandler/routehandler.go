@@ -43,7 +43,10 @@ func (routeHandler *RouteHandler) HandleMetric(
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	var key = req.Metric + processTags(req.Tags)
+	var key = req.Metric
+	if req.Tags != "" {
+		key += processTags(req.Tags)
+	}
 
 	var sampleRate float64 = 1
 	if req.SampleRate != 0 {
@@ -68,7 +71,10 @@ func (routeHandler *RouteHandler) HandleMetricName(
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	var key = metricName + processTags(req.Tags)
+	var key = metricName
+	if req.Tags != "" {
+		key += processTags(req.Tags)
+	}
 
 	var sampleRate float64 = 1
 	if req.SampleRate != 0 {

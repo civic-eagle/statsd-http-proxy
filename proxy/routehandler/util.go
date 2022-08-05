@@ -14,7 +14,7 @@ import (
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
 	Value    int    `json:"value"`
-	Tags string `json:"tags,omitempty"`
+	Tags string `json:"tags"`
 	SampleRate float64 `json:"sampleRate"`
 }
 

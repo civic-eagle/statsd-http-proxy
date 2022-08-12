@@ -62,6 +62,8 @@ func main() {
 	var metricPrefix = flag.String("metric-prefix", "", "Prefix of metric name")
 	var tokenSecret = flag.String("jwt-secret", "", "Secret to encrypt JWT")
 	var verbose = flag.Bool("verbose", false, "Verbose")
+	var promFilter = flag.Bool("prometheus-compat", false, "Enforce prometheus data model compatibility on incoming metrics")
+	var normalize = flag.Bool("normalize", false, "Ensure all metrics (and tags) are lower case strings")
 	var version = flag.Bool("version", false, "Show version")
 	var profilerHTTPort = flag.Int("profiler-http-port", 0, "Start profiler localhost")
 
@@ -107,6 +109,8 @@ func main() {
 		*tlsCert,
 		*tlsKey,
 		*metricPrefix,
+		*promFilter,
+		*normalize,
 		*tokenSecret,
 		*verbose,
 	)

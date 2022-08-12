@@ -36,6 +36,8 @@ func NewServer(
 	tlsCert string,
 	tlsKey string,
 	metricPrefix string,
+	promFilter bool,
+	normalize bool,
 	tokenSecret string,
 	verbose bool,
 ) *Server {
@@ -51,6 +53,8 @@ func NewServer(
 	routeHandler := routehandler.NewRouteHandler(
 		statsdClient,
 		metricPrefix,
+		promFilter,
+		normalize,
 	)
 
 	// build router

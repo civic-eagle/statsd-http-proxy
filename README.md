@@ -98,21 +98,21 @@ statsd-http-proxy --version
 
 Command line arguments:
 
-| Parameter       | Description                          | Default value                                                                     |
-|-----------------|--------------------------------------|-----------------------------------------------------------------------------------|
-| verbose         | Print debug info to stderr           | Optional. Default false                                                           |
-| http-host       | Host of HTTP server                  | Optional. Default 127.0.0.1. To accept connections on any interface, set to ""    |
-| http-port       | Port of HTTP server                  | Optional. Default 80                                                              |
-| http-timeout-read | The maximum duration in seconds for reading the entire request, including the body | Optional. Defaults to 1 second |
-| http-timeout-write | The maximum duration in seconds before timing out writes of the respons | Optional. Defaults to 1 second  |
-| http-timeout-idle | The maximum amount of time in seconds to wait for the next request when keep-alives are enabled | Optional. Defaults to 1 second |
-| tls-cert        | TLS certificate for the HTTPS        | Optional. Default "" to use HTTP. If both tls-cert and tls-key set, HTTPS is used |
-| tls-key         | TLS private key for the HTTPS        | Optional. Default "" to use HTTP. If both tls-cert and tls-key set, HTTPS is used |
-| statsd-host     | Host of StatsD instance              | Optional. Default 127.0.0.1                                                       |
-| statsd-port     | Port of StatsD instance              | Optional. Default 8125                                                            |
-| jwt-secret      | JWT token secret                     | Optional. If not set, server accepts all connections                              |
-| metric-prefix   | Prefix, added to any metric name     | Optional. If not set, do not add prefix                                           |
-| version         | Print version of server and exit     | Optional                                                                          |
+| Parameter       | Description                          | Default value                                                                                |
+|-----------------|--------------------------------------|----------------------------------------------------------------------------------------------|
+| verbose         | Print debug info to stderr           | Optional. Default false                                                                      |
+| http-host       | Host of HTTP server                  | Optional. Default 127.0.0.1. To accept connections on any interface, set to ""               |
+| http-port       | Port of HTTP server                  | Optional. Default 8825                                                                       |
+| http-timeout-read | The maximum duration in seconds for reading the entire request, including the body | Optional. Defaults to 2 seconds              |
+| http-timeout-write | The maximum duration in seconds before timing out writes of the respons | Optional. Defaults to 2 seconds                        |
+| http-timeout-idle | The maximum amount of time in seconds to wait for the next request when keep-alives are enabled | Optional. Defaults to 5 seconds |
+| tls-cert        | TLS certificate for the HTTPS        | Optional. Default "" to use HTTP. If both tls-cert and tls-key set, HTTPS is used            |
+| tls-key         | TLS private key for the HTTPS        | Optional. Default "" to use HTTP. If both tls-cert and tls-key set, HTTPS is used            |
+| statsd-host     | Host of StatsD instance              | Optional. Default 127.0.0.1                                                                  |
+| statsd-port     | Port of StatsD instance              | Optional. Default 8125                                                                       |
+| jwt-secret      | JWT token secret                     | Optional. If not set, server accepts all connections                                         |
+| metric-prefix   | Prefix, added to any metric name     | Optional. If not set, do not add prefix                                                      |
+| version         | Print version of server and exit     | Optional                                                                                     |
 
 ## Client Interactions
 

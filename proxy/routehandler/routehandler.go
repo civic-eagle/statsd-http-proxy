@@ -91,7 +91,7 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	}
 	var key string
 	if routeHandler.metricPrefix != "" {
-		key = routeHanderl.metricPrefix + metricName
+		key = routeHandler.metricPrefix + metricName
 	} else {
 		key = metricName
 	}
@@ -192,23 +192,25 @@ func processTags(tagsList string) string {
 		return ""
 	}
 
+	var finalTags string
 	for _, pair := range list {
 		pairItems := strings.Split(pair, "=")
 		if len(pairItems) != 2 {
 			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Missing pair")
-			return ""
+			continue
 		} else if len(strings.TrimSpace(pairItems[0])) == 0 {
 			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag key")
-			return ""
+			continue
 		} else if len(strings.TrimSpace(pairItems[1])) == 0 {
 			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag value")
-			return ""
+			continue
 		}
+		finalTags += fmt.Sprintf("%s,", pair)
 	}
-	return "," + tagsList
+	return "," + strings.TrimSuffix(finalTags, ",")
 }
 
 func filterMetric(m MetricRequest) (MetricRequest, error) {
@@ -227,7 +229,7 @@ func filterMetric(m MetricRequest) (MetricRequest, error) {
 	if m.Tags != "" {
 		list := strings.Split(strings.TrimSpace(m.Tags), ",")
 		if len(list) > 0 {
-			finalTags := ""
+			var finalTags string
 			for _, pair := range list {
 				tagPair := strings.Split(pair, "=")
 				// filter out any bad tag pairs first
@@ -236,12 +238,12 @@ func filterMetric(m MetricRequest) (MetricRequest, error) {
 				}
 				if !allowedTagKeys.MatchString(tagPair[0]) {
 					tagKey := replaceChars.ReplaceAllString(tagPair[0], "_")
-					finalTags += fmt.Sprintf("%s=%s", tagKey, tagPair[1])
+					finalTags += fmt.Sprintf("%s=%s,", tagKey, tagPair[1])
 				} else {
-					finalTags += pair
+					finalTags += fmt.Sprintf("%s,", pair)
 				}
 			}
-			metric.Tags = finalTags
+			metric.Tags = strings.TrimSuffix(finalTags, ",")
 		}
 	} else {
 		metric.Tags = ""

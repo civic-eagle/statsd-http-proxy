@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -44,6 +45,9 @@ func NewServer(
 	// prepare metric prefix
 	if metricPrefix != "" && (metricPrefix)[len(metricPrefix)-1:] != "_" {
 		metricPrefix = metricPrefix + "_"
+	}
+	if normalize {
+		metricPrefix = strings.ToLower(metricPrefix)
 	}
 
 	// create StatsD Client

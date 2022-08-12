@@ -89,7 +89,12 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	if err != nil {
 		return
 	}
-	var key = metricName
+	var key string
+	if routeHandler.metricPrefix != "" {
+		key = routeHanderl.metricPrefix + metricName
+	} else {
+		key = metricName
+	}
 	if req.Tags != "" {
 		key += processTags(req.Tags)
 	}

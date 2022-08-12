@@ -123,7 +123,7 @@ func procBody(w http.ResponseWriter, r *http.Request) (MetricRequest, error) {
 	data (JSON object) that we can parse
 	*/
 	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		http.Error(w, "Unsupported content type", 400)
+		http.Error(w, "Unsupported content type %v", r.Header.Get("Content-Type"), 400)
 		return MetricRequest{}, fmt.Errorf("Unsupported content type")
 	}
 

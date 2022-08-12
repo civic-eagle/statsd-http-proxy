@@ -24,7 +24,7 @@ make
 
 Configuration of Nginx balancer:
 
-```
+```config
 server {
     listen 443 http2;
     server_name statsd-proxy.example.com;
@@ -46,6 +46,19 @@ server {
 }
 ```
 
+## Caddy config
+
+```config
+localhost {
+    handle /statsd* {
+        uri strip_prefix /statsd
+        # suppress external access to /metrics and /heartbeat endpoints
+        redir /metrics / permanent
+        redir /heartbeat / permanent
+        reverse_proxy statsd-proxy:80
+    }
+}
+```
 
 ## Usage
 

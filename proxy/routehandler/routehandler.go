@@ -5,11 +5,19 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
 	log "github.com/sirupsen/logrus"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
+)
+
+var (
+	allowedNames     = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_:]*$")
+	allowedFirstChar = regexp.MustCompile("^[a-zA-Z]")
+	replaceChars     = regexp.MustCompile("[^a-zA-Z0-9_:]")
+	allowedTagKeys   = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
 )
 
 // 5 MB
@@ -19,6 +27,8 @@ const maxBodySize = 5000 * 1024 * 1024
 type RouteHandler struct {
 	statsdClient statsdclient.StatsdClientInterface
 	metricPrefix string
+	promFilter bool
+	normalize bool
 }
 
 // MetricRequest: internal representation of a metric to be written
@@ -33,11 +43,15 @@ type MetricRequest struct {
 func NewRouteHandler(
 	statsdClient statsdclient.StatsdClientInterface,
 	metricPrefix string,
+	promFilter bool,
+	normalize bool,
 ) *RouteHandler {
 	// build route handler
 	routeHandler := RouteHandler{
 		statsdClient,
 		metricPrefix,
+		promFilter,
+		normalize,
 	}
 
 	return &routeHandler
@@ -48,7 +62,7 @@ func (routeHandler *RouteHandler) HandleMetric(
 	r *http.Request,
 	metricType string,
 ) {
-	req, err := procBody(w, r)
+	req, err := procBody(w, r, routeHandler.metricPrefix, routeHandler.promFilter, routeHandler.normalize)
 	if err != nil {
 		return
 	}
@@ -71,11 +85,16 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	metricType string,
 	metricName string,
 ) {
-	req, err := procBody(w, r)
+	req, err := procBody(w, r, routeHandler.metricPrefix, routeHandler.promFilter, routeHandler.normalize)
 	if err != nil {
 		return
 	}
-	var key = metricName
+	var key string
+	if routeHandler.metricPrefix != "" {
+		key = routeHandler.metricPrefix + metricName
+	} else {
+		key = metricName
+	}
 	if req.Tags != "" {
 		key += processTags(req.Tags)
 	}
@@ -116,7 +135,7 @@ func sendMetric(routeHandler *RouteHandler, metricType string, key string, value
 	}
 }
 
-func procBody(w http.ResponseWriter, r *http.Request) (MetricRequest, error) {
+func procBody(w http.ResponseWriter, r *http.Request, prefix string, promFilter bool, normalize bool) (MetricRequest, error) {
 	/*
 	All incoming POST requests to '/:type'
 	and '/:type/:metric' should have consistent
@@ -140,7 +159,20 @@ func procBody(w http.ResponseWriter, r *http.Request) (MetricRequest, error) {
 		return MetricRequest{}, err
 	}
 
-	return req, nil
+	if prefix != "" {
+		req.Metric = prefix + req.Metric
+	}
+
+	if normalize {
+		req.Metric = strings.ToLower(req.Metric)
+		req.Tags = strings.ToLower(req.Tags)
+	}
+
+	if promFilter {
+		return filterMetric(req)
+	} else {
+		return req, nil
+	}
 }
 
 func processTags(tagsList string) string {
@@ -160,18 +192,65 @@ func processTags(tagsList string) string {
 		return ""
 	}
 
+	var finalTags string
 	for _, pair := range list {
 		pairItems := strings.Split(pair, "=")
 		if len(pairItems) != 2 {
+			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Missing pair")
-			return ""
+			continue
 		} else if len(strings.TrimSpace(pairItems[0])) == 0 {
+			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag key")
-			return ""
+			continue
 		} else if len(strings.TrimSpace(pairItems[1])) == 0 {
+			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag value")
-			return ""
+			continue
 		}
+		finalTags += fmt.Sprintf("%s,", pair)
 	}
-	return "," + tagsList
+	return "," + strings.TrimSuffix(finalTags, ",")
+}
+
+func filterMetric(m MetricRequest) (MetricRequest, error) {
+	metric := MetricRequest{
+		Metric: "", Value: 0, Tags: "", SampleRate: 0,
+	}
+	if !allowedFirstChar.MatchString(m.Metric) {
+		vmmetrics.GetOrCreateCounter("metrics_dropped_total").Inc()
+		return MetricRequest{}, fmt.Errorf("Invalid first character in metric name")
+	}
+	if !allowedNames.MatchString(m.Metric) {
+		metric.Metric = replaceChars.ReplaceAllString(m.Metric, "_")
+	} else {
+		metric.Metric = m.Metric
+	}
+	if m.Tags != "" {
+		list := strings.Split(strings.TrimSpace(m.Tags), ",")
+		if len(list) > 0 {
+			var finalTags string
+			for _, pair := range list {
+				tagPair := strings.Split(pair, "=")
+				// filter out any bad tag pairs first
+				if len(tagPair) != 2 || len(strings.TrimSpace(tagPair[0])) == 0 || len(strings.TrimSpace(tagPair[1])) == 0 {
+					log.WithFields(log.Fields{"Tags": list, "pair": tagPair}).Debug("Invalid tag set")
+					continue
+				}
+				if !allowedTagKeys.MatchString(tagPair[0]) {
+					tagKey := replaceChars.ReplaceAllString(tagPair[0], "_")
+					finalTags += fmt.Sprintf("%s=%s,", tagKey, tagPair[1])
+				} else {
+					finalTags += fmt.Sprintf("%s,", pair)
+				}
+			}
+			metric.Tags = strings.TrimSuffix(finalTags, ",")
+		}
+	} else {
+		metric.Tags = ""
+	}
+	metric.Value = m.Value
+	metric.SampleRate = m.SampleRate
+	log.WithFields(log.Fields{"metric": metric}).Debug("Final Metric")
+	return metric, nil
 }

@@ -234,6 +234,7 @@ func filterMetric(m MetricRequest) (MetricRequest, error) {
 				tagPair := strings.Split(pair, "=")
 				// filter out any bad tag pairs first
 				if len(tagPair) != 2 || len(strings.TrimSpace(tagPair[0])) == 0 || len(strings.TrimSpace(tagPair[1])) == 0 {
+					log.WithFields(log.Fields{"Tags": list, "pair": tagPair}).Debug("Invalid tag set")
 					continue
 				}
 				if !allowedTagKeys.MatchString(tagPair[0]) {
@@ -250,6 +251,6 @@ func filterMetric(m MetricRequest) (MetricRequest, error) {
 	}
 	metric.Value = m.Value
 	metric.SampleRate = m.SampleRate
-
+	log.WithFields(log.Fields{"metric": metric}).Debug("Final Metric")
 	return metric, nil
 }

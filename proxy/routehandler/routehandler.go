@@ -66,7 +66,11 @@ func (routeHandler *RouteHandler) HandleMetric(
 	if err != nil {
 		return
 	}
-	var key = req.Metric
+	/*
+	 * With new routing, prefixes are handled in `procBody`
+	 * so we can skip that step here
+	 */
+	key := req.Metric
 	if req.Tags != "" {
 		key += processTags(req.Tags)
 	}
@@ -90,6 +94,11 @@ func (routeHandler *RouteHandler) HandleMetricName(
 		return
 	}
 	var key string
+	/*
+	 * Old routing means we don't know the metric name until
+	 * _after_ we've processed the request body
+	 * so we process the metric prefix here
+	 */
 	if routeHandler.metricPrefix != "" {
 		key = routeHandler.metricPrefix + metricName
 	} else {

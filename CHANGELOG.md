@@ -1,3 +1,7 @@
+## 1.6
+  * prometheus-compat filtering for incoming metrics
+  * fix metric prefix settings
+
 ## 1.5.2
   * bug with empty tag list fixed
 

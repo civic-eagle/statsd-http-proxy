@@ -162,7 +162,7 @@ Adds timing to the bucket. Expected `value` as milliseconds integer. Default is 
 
 ### `set`
 
-Adds value in a set bucket. Expected `value` as string. Sets are a relatively new concept in recent versions of StatsD. Sets track the number of unique elements belonging to a group. At each flush interval, the statsd backend will push the number of unique elements in the set as a single gauge value.
+Adds value in a set bucket. Sets are a relatively new concept in recent versions of StatsD. Sets track the number of unique elements belonging to a group. At each flush interval, the statsd backend will push the number of unique elements in the set as a single gauge value.
 
 ## Legacy Pattern
 

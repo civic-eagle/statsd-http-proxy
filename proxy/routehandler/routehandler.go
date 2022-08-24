@@ -34,7 +34,7 @@ type RouteHandler struct {
 // MetricRequest: internal representation of a metric to be written
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
-	Value    int    `json:"value"`
+	Value    interface{} `json:"value"`
 	Tags string `json:"tags"`
 	SampleRate float64 `json:"sampleRate"`
 }
@@ -120,7 +120,7 @@ func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, 
 	fmt.Fprint(w, "OK")
 }
 
-func sendMetric(routeHandler *RouteHandler, metricType string, key string, value int, sampleRate float32) {
+func sendMetric(routeHandler *RouteHandler, metricType string, key string, value interface{}, sampleRate float32) {
 	/*
 	Since we have two incoming handler paths for metrics
 	we need a common switch case to actually process each metric
@@ -130,16 +130,16 @@ func sendMetric(routeHandler *RouteHandler, metricType string, key string, value
 	*/
 	switch metricType {
 	case "count":
-		routeHandler.statsdClient.Count(key, value, sampleRate)
+		routeHandler.statsdClient.Count(key, value.(int), sampleRate)
 		vmmetrics.GetOrCreateCounter("counters_added_total").Inc()
 	case "gauge":
-		routeHandler.statsdClient.Gauge(key, value)
+		routeHandler.statsdClient.Gauge(key, value.(int))
 		vmmetrics.GetOrCreateCounter("gauges_added_total").Inc()
 	case "timing":
-		routeHandler.statsdClient.Timing(key, int64(value), sampleRate)
+		routeHandler.statsdClient.Timing(key, value.(int64), sampleRate)
 		vmmetrics.GetOrCreateCounter("timing_added_total").Inc()
 	case "set":
-		routeHandler.statsdClient.Set(key, value)
+		routeHandler.statsdClient.Set(key, value.(int))
 		vmmetrics.GetOrCreateCounter("set_added_total").Inc()
 	}
 }
@@ -224,7 +224,7 @@ func processTags(tagsList string) string {
 
 func filterMetric(m MetricRequest) (MetricRequest, error) {
 	metric := MetricRequest{
-		Metric: "", Value: 0, Tags: "", SampleRate: 0,
+		Metric: "", Value: m.Value, Tags: "", SampleRate: 0,
 	}
 	if !allowedFirstChar.MatchString(m.Metric) {
 		vmmetrics.GetOrCreateCounter("metrics_dropped_total").Inc()
@@ -258,7 +258,6 @@ func filterMetric(m MetricRequest) (MetricRequest, error) {
 	} else {
 		metric.Tags = ""
 	}
-	metric.Value = m.Value
 	metric.SampleRate = m.SampleRate
 	log.WithFields(log.Fields{"metric": metric}).Debug("Final Metric")
 	return metric, nil

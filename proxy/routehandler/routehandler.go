@@ -31,6 +31,11 @@ type RouteHandler struct {
 	normalize bool
 }
 
+// multiMetric: Allow for writing multiple stats at once in a batch
+type multiMetric struct {
+	Metrics []MetricRequest
+}
+
 // MetricRequest: internal representation of a metric to be written
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
@@ -62,25 +67,79 @@ func (routeHandler *RouteHandler) HandleMetric(
 	r *http.Request,
 	metricType string,
 ) {
-	req, err := procBody(w, r, routeHandler.metricPrefix, routeHandler.promFilter, routeHandler.normalize)
-	if err != nil {
+	/*
+	All incoming POST requests to '/:type'
+	and '/:type/:metric' should have consistent
+	data (JSON object) that we can parse
+	*/
+	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
+		http.Error(w, fmt.Sprintf("Unsupported content type %v", r.Header.Get("Content-Type")), 400)
 		return
 	}
+
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	r.Body.Close()
+
 	/*
-	 * With new routing, prefixes are handled in `procBody`
-	 * so we can skip that step here
-	 */
-	key := req.Metric
-	if req.Tags != "" {
-		key += processTags(req.Tags)
+	All incoming POST requests to '/:type'
+	and '/:type/:metric' should have consistent
+	data (JSON object) that we can parse
+
+	POSTs to '/:type' may have two different objects, though.
+	Either an array of metrics to write (batch sending improves performance significantly!)
+	or a single metric at a time.
+	*/
+	var reqs multiMetric
+	if err := json.Unmarshal(body, &reqs); err == nil {
+		for _, req := range reqs.Metrics {
+			req, err = processMetric(req, routeHandler.metricPrefix, routeHandler.normalize, routeHandler.promFilter)
+			if err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+			sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
+		}
+	} else {
+		var req MetricRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		req, err = processMetric(req, routeHandler.metricPrefix, routeHandler.normalize, routeHandler.promFilter)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
+	}
+}
+
+func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bool) (MetricRequest, error) {
+	var err error
+	if prefix != "" {
+		m.Metric = prefix + m.Metric
 	}
 
-	var sampleRate float64 = 1
-	if req.SampleRate != 0 {
-		sampleRate = float64(req.SampleRate)
+	if normalize {
+		m.Metric = strings.ToLower(m.Metric)
+		m.Tags = strings.ToLower(m.Tags)
 	}
 
-	sendMetric(routeHandler, metricType, key, req.Value, float32(sampleRate))
+	if promFilter {
+		m, err = filterPromMetric(m)
+		if err != nil {
+			return MetricRequest{}, err
+		}
+	}
+	if m.Tags != "" {
+		m.Metric += processTags(m.Tags)
+	}
+
+	return m, nil
 }
 
 func (routeHandler *RouteHandler) HandleMetricName(
@@ -89,31 +148,57 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	metricType string,
 	metricName string,
 ) {
-	req, err := procBody(w, r, routeHandler.metricPrefix, routeHandler.promFilter, routeHandler.normalize)
-	if err != nil {
+	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
+		http.Error(w, fmt.Sprintf("Unsupported content type %v", r.Header.Get("Content-Type")), 400)
 		return
 	}
-	var key string
+
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	r.Body.Close()
+
+	/*
+	All incoming POST requests to '/:type'
+	and '/:type/:metric' should have consistent
+	data (JSON object) that we can parse
+	*/
+	var req MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	
 	/*
 	 * Old routing means we don't know the metric name until
 	 * _after_ we've processed the request body
 	 * so we process the metric prefix here
 	 */
 	if routeHandler.metricPrefix != "" {
-		key = routeHandler.metricPrefix + metricName
+		req.Metric = routeHandler.metricPrefix + metricName
 	} else {
-		key = metricName
+		req.Metric = metricName
+	}
+
+	if routeHandler.normalize {
+		req.Metric = strings.ToLower(req.Metric)
+		req.Tags = strings.ToLower(req.Tags)
+	}
+
+	if routeHandler.promFilter {
+		req, err = filterPromMetric(req)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
 	}
 	if req.Tags != "" {
-		key += processTags(req.Tags)
+		req.Metric += processTags(req.Tags)
 	}
 
-	var sampleRate float64 = 1
-	if req.SampleRate != 0 {
-		sampleRate = float64(req.SampleRate)
-	}
-
-	sendMetric(routeHandler, metricType, key, req.Value, float32(sampleRate))
+	sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
 }
 
 func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {
@@ -141,46 +226,6 @@ func sendMetric(routeHandler *RouteHandler, metricType string, key string, value
 	case "set":
 		routeHandler.statsdClient.Set(key, value.(int))
 		vmmetrics.GetOrCreateCounter("set_added_total").Inc()
-	}
-}
-
-func procBody(w http.ResponseWriter, r *http.Request, prefix string, promFilter bool, normalize bool) (MetricRequest, error) {
-	/*
-	All incoming POST requests to '/:type'
-	and '/:type/:metric' should have consistent
-	data (JSON object) that we can parse
-	*/
-	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		http.Error(w, fmt.Sprintf("Unsupported content type %v", r.Header.Get("Content-Type")), 400)
-		return MetricRequest{}, fmt.Errorf("Unsupported content type")
-	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return MetricRequest{}, err
-	}
-	r.Body.Close()
-
-	var req MetricRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), 400)
-		return MetricRequest{}, err
-	}
-
-	if prefix != "" {
-		req.Metric = prefix + req.Metric
-	}
-
-	if normalize {
-		req.Metric = strings.ToLower(req.Metric)
-		req.Tags = strings.ToLower(req.Tags)
-	}
-
-	if promFilter {
-		return filterMetric(req)
-	} else {
-		return req, nil
 	}
 }
 
@@ -222,7 +267,11 @@ func processTags(tagsList string) string {
 	return "," + strings.TrimSuffix(finalTags, ",")
 }
 
-func filterMetric(m MetricRequest) (MetricRequest, error) {
+func filterPromMetric(m MetricRequest) (MetricRequest, error) {
+	/*
+	Remove/Replace any characters that don't meet the Prometheus
+	data model requirements: https://prometheus.io/docs/concepts/data_model/
+	*/
 	metric := MetricRequest{
 		Metric: "", Value: m.Value, Tags: "", SampleRate: 0,
 	}

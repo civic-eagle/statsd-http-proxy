@@ -103,11 +103,11 @@ func filterPromMetric(m MetricRequest) (MetricRequest, error) {
 	data model requirements: https://prometheus.io/docs/concepts/data_model/
 	*/
 	metric := MetricRequest{
-		Metric: "", Value: m.Value, Tags: "", SampleRate: 0,
+		Metric: "", Value: m.Value, Tags: "", SampleRate: m.SampleRate,
 	}
 	if !allowedFirstChar.MatchString(m.Metric) {
 		vmmetrics.GetOrCreateCounter("metrics_dropped_total").Inc()
-		return MetricRequest{}, fmt.Errorf("Invalid first character in metric name")
+		return metric, fmt.Errorf("Invalid first character in metric name")
 	}
 	if !allowedNames.MatchString(m.Metric) {
 		metric.Metric = replaceChars.ReplaceAllString(m.Metric, "_")
@@ -137,7 +137,6 @@ func filterPromMetric(m MetricRequest) (MetricRequest, error) {
 	} else {
 		metric.Tags = ""
 	}
-	metric.SampleRate = m.SampleRate
 	log.WithFields(log.Fields{"metric": metric}).Debug("Final Metric")
 	return metric, nil
 }

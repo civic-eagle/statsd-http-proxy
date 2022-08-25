@@ -62,34 +62,25 @@ func NewRouteHandler(
 	return &routeHandler
 }
 
+// HandleHeartbeatRequest: Just respond to health check requests
+func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "OK")
+}
+
+// HandleMetric: New path addressing metrics send through /:type
 func (routeHandler *RouteHandler) HandleMetric(
 	w http.ResponseWriter,
 	r *http.Request,
 	metricType string,
 ) {
-	/*
-	All incoming POST requests to '/:type'
-	and '/:type/:metric' should have consistent
-	data (JSON object) that we can parse
-	*/
-	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		http.Error(w, fmt.Sprintf("Unsupported content type %v", r.Header.Get("Content-Type")), 400)
-		return
-	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	body, err := procBody(r)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	r.Body.Close()
 
 	/*
-	All incoming POST requests to '/:type'
-	and '/:type/:metric' should have consistent
-	data (JSON object) that we can parse
-
-	POSTs to '/:type' may have two different objects, though.
+	POSTs to '/:type' may have two different objects:
 	Either an array of metrics to write (batch sending improves performance significantly!)
 	or a single metric at a time.
 	*/
@@ -118,6 +109,54 @@ func (routeHandler *RouteHandler) HandleMetric(
 	}
 }
 
+// HandleMetricName: Old path addressing metrics send through /:type/:name
+func (routeHandler *RouteHandler) HandleMetricName(
+	w http.ResponseWriter,
+	r *http.Request,
+	metricType string,
+	metricName string,
+) {
+	body, err := procBody(r)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	
+	var req MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	/*
+	The only change we have to make between the old pattern and the new pattern
+	is that we need to set the Metric key *after* we load the data into memory
+
+	Also, the old path won't support batch writes because we can only have one
+	metric name per write.
+	*/
+	req.Metric = metricName
+	req, err = processMetric(req, routeHandler.metricPrefix, routeHandler.normalize, routeHandler.promFilter)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
+}
+
+func procBody(r *http.Request) ([]byte, error) {
+	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
+		return []byte{}, fmt.Errorf("Unsupported content type %v", r.Header.Get("Content-Type"))
+	}
+
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
+	if err != nil {
+		return []byte{}, err
+	}
+	r.Body.Close()
+
+	return body, nil
+}
+
 func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bool) (MetricRequest, error) {
 	var err error
 	if prefix != "" {
@@ -140,69 +179,6 @@ func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bo
 	}
 
 	return m, nil
-}
-
-func (routeHandler *RouteHandler) HandleMetricName(
-	w http.ResponseWriter,
-	r *http.Request,
-	metricType string,
-	metricName string,
-) {
-	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		http.Error(w, fmt.Sprintf("Unsupported content type %v", r.Header.Get("Content-Type")), 400)
-		return
-	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-	r.Body.Close()
-
-	/*
-	All incoming POST requests to '/:type'
-	and '/:type/:metric' should have consistent
-	data (JSON object) that we can parse
-	*/
-	var req MetricRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), 400)
-		return
-	}
-	
-	/*
-	 * Old routing means we don't know the metric name until
-	 * _after_ we've processed the request body
-	 * so we process the metric prefix here
-	 */
-	if routeHandler.metricPrefix != "" {
-		req.Metric = routeHandler.metricPrefix + metricName
-	} else {
-		req.Metric = metricName
-	}
-
-	if routeHandler.normalize {
-		req.Metric = strings.ToLower(req.Metric)
-		req.Tags = strings.ToLower(req.Tags)
-	}
-
-	if routeHandler.promFilter {
-		req, err = filterPromMetric(req)
-		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
-	}
-	if req.Tags != "" {
-		req.Metric += processTags(req.Tags)
-	}
-
-	sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
-}
-
-func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "OK")
 }
 
 func sendMetric(routeHandler *RouteHandler, metricType string, key string, value interface{}, sampleRate float32) {

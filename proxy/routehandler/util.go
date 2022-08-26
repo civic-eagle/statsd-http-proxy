@@ -142,6 +142,5 @@ func filterPromMetric(m MetricRequest) (MetricRequest, error) {
 	} else {
 		metric.Tags = ""
 	}
-	log.WithFields(log.Fields{"metric": metric}).Debug("Final Metric")
 	return metric, nil
 }

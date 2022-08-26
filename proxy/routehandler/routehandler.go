@@ -17,15 +17,10 @@ type RouteHandler struct {
 	normalize bool
 }
 
-// multiMetric: Allow for writing multiple stats at once in a batch
-type multiMetric struct {
-	Metrics []MetricRequest
-}
-
 // MetricRequest: internal representation of a metric to be written
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
-	Value    interface{} `json:"value"`
+	Value    int64 `json:"value"`
 	Tags string `json:"tags"`
 	SampleRate float64 `json:"sampleRate"`
 }
@@ -70,9 +65,9 @@ func (routeHandler *RouteHandler) HandleMetric(
 	Either an array of metrics to write (batch sending improves performance significantly!)
 	or a single metric at a time.
 	*/
-	var reqs multiMetric
+	var reqs []MetricRequest
 	if err := json.Unmarshal(body, &reqs); err == nil {
-		for _, req := range reqs.Metrics {
+		for _, req := range reqs {
 			req, err = processMetric(req, routeHandler.metricPrefix, routeHandler.normalize, routeHandler.promFilter)
 			if err != nil {
 				http.Error(w, err.Error(), 400)
@@ -129,7 +124,7 @@ func (routeHandler *RouteHandler) HandleMetricName(
 	sendMetric(routeHandler, metricType, req.Metric, req.Value, float32(req.SampleRate))
 }
 
-func sendMetric(routeHandler *RouteHandler, metricType string, key string, value interface{}, sampleRate float32) {
+func sendMetric(routeHandler *RouteHandler, metricType string, key string, value int64, sampleRate float32) {
 	/*
 	Since we have two incoming handler paths for metrics
 	we need a common switch case to actually process each metric
@@ -139,16 +134,16 @@ func sendMetric(routeHandler *RouteHandler, metricType string, key string, value
 	*/
 	switch metricType {
 	case "count":
-		routeHandler.statsdClient.Count(key, value.(int), sampleRate)
+		routeHandler.statsdClient.Count(key, int(value), sampleRate)
 		vmmetrics.GetOrCreateCounter("counters_added_total").Inc()
 	case "gauge":
-		routeHandler.statsdClient.Gauge(key, value.(int))
+		routeHandler.statsdClient.Gauge(key, int(value))
 		vmmetrics.GetOrCreateCounter("gauges_added_total").Inc()
 	case "timing":
-		routeHandler.statsdClient.Timing(key, value.(int64), sampleRate)
+		routeHandler.statsdClient.Timing(key, value, sampleRate)
 		vmmetrics.GetOrCreateCounter("timing_added_total").Inc()
 	case "set":
-		routeHandler.statsdClient.Set(key, value.(int))
+		routeHandler.statsdClient.Set(key, int(value))
 		vmmetrics.GetOrCreateCounter("set_added_total").Inc()
 	}
 }

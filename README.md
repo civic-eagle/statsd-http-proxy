@@ -179,7 +179,8 @@ $.ajax({
     data: [
       {
         metric: 'some.key.name',
-        value: 100500
+        value: 100500,
+        tags: 'env=prod,locale=en-us'
       },
       {
         metric: 'some.other.key.name',

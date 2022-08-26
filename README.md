@@ -164,6 +164,33 @@ Adds timing to the bucket. Expected `value` as milliseconds integer. Default is 
 
 Adds value in a set bucket. Sets are a relatively new concept in recent versions of StatsD. Sets track the number of unique elements belonging to a group. At each flush interval, the statsd backend will push the number of unique elements in the set as a single gauge value.
 
+### Batch Writes
+
+Sample code to send a group metrics in browser with JWT token in header:
+
+```javascript
+$.ajax({
+    url: 'http://127.0.0.1:8080/count/',
+    method: 'POST',
+    headers: {
+        'X-JWT-Token': 'some-jwt-token'
+        'Content-Type': 'application/json'
+    },
+    data: [
+      {
+        metric: 'some.key.name',
+        value: 100500
+      },
+      {
+        metric: 'some.other.key.name',
+        value: 1
+      }
+    ]
+});
+```
+
+This allows us to send multiple metrics at once (of the same type), saving significant bandwidth/processing time for larger groups of writes.
+
 ## Legacy Pattern
 
 You can also send metrics in using the legacy pattern:

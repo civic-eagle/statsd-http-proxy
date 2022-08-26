@@ -1,7 +1,6 @@
 package routehandler
 
 import (
-	"fmt"
 	"encoding/json"
 	"net/http"
 
@@ -41,11 +40,6 @@ func NewRouteHandler(
 	}
 
 	return &routeHandler
-}
-
-// HandleHeartbeatRequest: Just respond to health check requests
-func (routeHandler *RouteHandler) HandleHeartbeatRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "OK")
 }
 
 // HandleMetric: New path addressing metrics send through /:type

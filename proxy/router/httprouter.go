@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
@@ -25,7 +26,9 @@ func NewHTTPRouter(
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				http.HandlerFunc(
-					routeHandler.HandleHeartbeatRequest,
+					func(w http.ResponseWriter, r *http.Request) {
+						fmt.Fprint(w, "OK")
+					},
 				),
 			),
 		),

@@ -41,6 +41,11 @@ func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bo
 		m.Metric = prefix + m.Metric
 	}
 
+	// An empty sample rate === a full sample rate
+	if m.SampleRate == 0 {
+		m.SampleRate = 1
+	}
+
 	if normalize {
 		m.Metric = strings.ToLower(m.Metric)
 		m.Tags = strings.ToLower(m.Tags)

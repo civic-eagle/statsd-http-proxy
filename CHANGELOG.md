@@ -1,6 +1,7 @@
 ## 1.7
   * batch writes into the `/:type` endpoint
     * many metrics in one write to the proxy, vastly improving performance over the wire
+  * Go 1.19
 
 ## 1.6
   * prometheus-compat filtering for incoming metrics

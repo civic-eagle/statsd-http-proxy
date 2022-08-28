@@ -50,6 +50,26 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
+		"/batch/:type",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricType := params.ByName("type")
+							routeHandler.HandleBatchMetric(w, r, metricType)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
 		"/:type",
 		middleware.Instrument(
 			middleware.ValidateCORS(

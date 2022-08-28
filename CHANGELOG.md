@@ -1,3 +1,6 @@
+## 1.7.1
+  * separate endpoint for batch writes
+
 ## 1.7
   * batch writes into the `/:type` endpoint
     * many metrics in one write to the proxy, vastly improving performance over the wire

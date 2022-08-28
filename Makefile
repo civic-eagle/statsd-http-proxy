@@ -27,6 +27,7 @@ setup: envsetup
 
 envsetup:
 	mkdir -p $(CURDIR)/.cache/
+	chmod -R 777 $(CURDIR)/.cache/
 
 test: envsetup fmt lint ## run tests
 	docker run --rm --user $(CURRENT_UID):$(CURRENT_GID) -v $(CURDIR)/.cache/:/.cache/ -v $(CURDIR):/app:z -w /app golang:$(GO_VER) go test -mod=vendor ./...

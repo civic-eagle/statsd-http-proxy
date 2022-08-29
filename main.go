@@ -127,6 +127,11 @@ func main() {
 		*normalize,
 	)
 
+	/*
+	Multiple processing threads so we don't get bottle-necked on one processor
+	Since each individual object on the channel is unique, we don't need
+	state between processor threads!
+	*/
 	for thread := 1; thread <= 4; thread++ {
 		go processor.Process()
 	}

@@ -82,6 +82,9 @@ func (Processor *Processor) sendMetric(metricType string, key string, value int6
 	case "set":
 		Processor.statsdClient.Set(key, int(value))
 		sets.Inc()
+	default:
+		log.WithFields(log.Fields{"metric": key, "type": metricType}).Error("Bad metric type, can't write")
+		config.DroppedMetrics.Inc()
 	}
 }
 

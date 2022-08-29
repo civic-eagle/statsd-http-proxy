@@ -1,3 +1,6 @@
+## 2.0.2
+  * handle bad metric type gracefully
+
 ## 2.0.1
   * Simplify passing variables in processor object
   * track dropped metrics during http request, too

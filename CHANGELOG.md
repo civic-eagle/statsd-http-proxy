@@ -1,3 +1,7 @@
+## 2.0.1
+  * Simplify passing variables in processor object
+  * track dropped metrics during http request, too
+
 ## 2.0
   * Channel for processing metrics
     * significantly improve client performance (since client doesn't have to wait for entire processing pipelien to finish)

@@ -16,6 +16,11 @@ var (
 	allowedFirstChar = regexp.MustCompile("^[a-zA-Z]")
 	replaceChars     = regexp.MustCompile("[^a-zA-Z0-9_:]")
 	allowedTagKeys   = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+
+	counters = vmmetrics.NewCounter("counters_added_total")
+	gauges = vmmetrics.NewCounter("gauges_added_total")
+	timings = vmmetrics.NewCounter("timing_added_total")
+	sets = vmmetrics.NewCounter("set_added_total")
 )
 
 // RouteHandler as a collection of route handlers
@@ -66,16 +71,16 @@ func (Processor *Processor) sendMetric(metricType string, key string, value int6
 	switch metricType {
 	case "count":
 		Processor.statsdClient.Count(key, int(value), sampleRate)
-		vmmetrics.GetOrCreateCounter("counters_added_total").Inc()
+		counters.Inc()
 	case "gauge":
 		Processor.statsdClient.Gauge(key, int(value))
-		vmmetrics.GetOrCreateCounter("gauges_added_total").Inc()
+		gauges.Inc()
 	case "timing":
 		Processor.statsdClient.Timing(key, value, sampleRate)
-		vmmetrics.GetOrCreateCounter("timing_added_total").Inc()
+		timings.Inc()
 	case "set":
 		Processor.statsdClient.Set(key, int(value))
-		vmmetrics.GetOrCreateCounter("set_added_total").Inc()
+		sets.Inc()
 	}
 }
 
@@ -153,6 +158,7 @@ func filterPromMetric(m config.MetricRequest) (config.MetricRequest, error) {
 	*/
 	metric := config.MetricRequest{
 		Metric: "", Value: m.Value, Tags: "", SampleRate: m.SampleRate,
+		MetricType: m.MetricType,
 	}
 	if !allowedFirstChar.MatchString(m.Metric) {
 		vmmetrics.GetOrCreateCounter("metrics_dropped_total").Inc()

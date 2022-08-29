@@ -46,6 +46,7 @@ func NewHTTPRouter(
 		),
 	)
 
+	/*
 	router.Handler(
 		http.MethodPost,
 		"/batch",
@@ -68,6 +69,7 @@ func NewHTTPRouter(
 			),
 		),
 	)
+	*/
 
 	router.Handler(
 		http.MethodPost,

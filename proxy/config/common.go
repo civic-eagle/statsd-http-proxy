@@ -1,11 +1,5 @@
 package config
 
-// BatchRequest: internal representation of a batch of metric to be written
-type BatchRequest struct {
-	MetricType string `json:"type"`
-	Metrics []MetricRequest `json:"metrics"`
-}
-
 // MetricRequest: internal representation of a metric to be written
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`

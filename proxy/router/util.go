@@ -9,18 +9,17 @@ import (
 	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
 )
 
-
+/*
 func unMarshalBatch(w http.ResponseWriter, r *http.Request, body []byte) {
-	var reqs config.BatchRequest
+	var reqs []config.MetricRequest
 	if err := json.Unmarshal(body, &reqs); err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	for _, metric := range reqs.Metrics {
-		metric.MetricType = reqs.MetricType
+	for _, metric := range reqs {
 		config.ProcessChan <- metric
 	}
-}
+}*/
 
 func unMarshalMetric(w http.ResponseWriter, r *http.Request, body []byte, metricType string) {
 	var req config.MetricRequest

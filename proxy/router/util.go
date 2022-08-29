@@ -1,12 +1,12 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
-	json "github.com/json-iterator/go"
 )
 
 /*
@@ -22,13 +22,21 @@ func unMarshalBatch(w http.ResponseWriter, r *http.Request, body []byte) {
 }*/
 
 func unMarshalMetric(w http.ResponseWriter, r *http.Request, body []byte, metricType string) {
-	var req config.MetricRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	var reqs []config.MetricRequest
+	if err := json.Unmarshal(body, &reqs); err == nil {
+		for _, metric := range reqs {
+			metric.MetricType = metricType
+			config.ProcessChan <- metric
+		}
+	} else {
+		var req config.MetricRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		req.MetricType = metricType
+		config.ProcessChan <- req
 	}
-	req.MetricType = metricType
-	config.ProcessChan <- req
 }
 
 func unMarshalMetricName(w http.ResponseWriter, r *http.Request, body []byte, metricType string, metricName string) {

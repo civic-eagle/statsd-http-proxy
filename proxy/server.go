@@ -6,13 +6,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
 	"github.com/civic-eagle/statsd-http-proxy/proxy/router"
-	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,7 +17,6 @@ import (
 type Server struct {
 	httpAddress string
 	httpServer  *http.Server
-	statsdClient statsdclient.StatsdClientInterface
 	tlsCert     string
 	tlsKey      string
 }
@@ -32,37 +28,13 @@ func NewServer(
 	httpReadTimeout int,
 	httpWriteTimeout int,
 	httpIdleTimeout int,
-	statsdHost string,
-	statsdPort int,
 	tlsCert string,
 	tlsKey string,
-	metricPrefix string,
-	promFilter bool,
-	normalize bool,
 	tokenSecret string,
 	verbose bool,
 ) *Server {
-	// prepare metric prefix
-	if metricPrefix != "" && (metricPrefix)[len(metricPrefix)-1:] != "_" {
-		metricPrefix = metricPrefix + "_"
-	}
-	if normalize {
-		metricPrefix = strings.ToLower(metricPrefix)
-	}
-
-	// create StatsD Client
-	statsdClient := statsdclient.NewGoMetricClient(statsdHost, statsdPort)
-
-	// build route handler
-	routeHandler := routehandler.NewRouteHandler(
-		statsdClient,
-		metricPrefix,
-		promFilter,
-		normalize,
-	)
-
 	// build router
-	httpServerHandler := router.NewHTTPRouter(routeHandler, tokenSecret)
+	httpServerHandler := router.NewHTTPRouter(tokenSecret)
 
 	// get HTTP server address to bind
 	httpAddress := fmt.Sprintf("%s:%d", httpHost, httpPort)
@@ -80,7 +52,6 @@ func NewServer(
 	statsdHTTPProxyServer := Server{
 		httpAddress,
 		httpServer,
-		statsdClient,
 		tlsCert,
 		tlsKey,
 	}
@@ -97,10 +68,6 @@ func (proxyServer *Server) Listen() {
 	// start HTTP/HTTPS proxy to StatsD
 	go func() {
 		log.WithFields(log.Fields{"Address": proxyServer.httpAddress}).Info("Starting HTTP server")
-
-		// open StatsD connection
-		proxyServer.statsdClient.Open()
-		defer proxyServer.statsdClient.Close()
 
 		// open HTTP connection
 		var err error

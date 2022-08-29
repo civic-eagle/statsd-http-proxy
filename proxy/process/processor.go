@@ -1,12 +1,12 @@
-package routehandler
+package processor
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
 	"strings"
 
+	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
 	log "github.com/sirupsen/logrus"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
 )
@@ -18,24 +18,68 @@ var (
 	allowedTagKeys   = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
 )
 
-// 5 MB
-const maxBodySize = 5000 * 1024 * 1024
-
-func procBody(r *http.Request) ([]byte, error) {
-	if contentType := r.Header.Get("Content-Type"); contentType != "application/json" {
-		return []byte{}, fmt.Errorf("Unsupported content type %v", r.Header.Get("Content-Type"))
-	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
-	if err != nil {
-		return []byte{}, err
-	}
-	r.Body.Close()
-
-	return body, nil
+// RouteHandler as a collection of route handlers
+type Processor struct {
+	statsdClient statsdclient.StatsdClientInterface
+	metricPrefix string
+	promFilter bool
+	normalize bool
 }
 
-func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bool) (MetricRequest, error) {
+// NewProcessor creates tool to process metrics as they are submitted async
+func NewProcessor(
+	statsdClient statsdclient.StatsdClientInterface,
+	metricPrefix string,
+	promFilter bool,
+	normalize bool,
+) *Processor {
+	// build processor
+	processor := Processor{
+		statsdClient,
+		metricPrefix,
+		promFilter,
+		normalize,
+	}
+
+	return &processor
+}
+
+func (Processor *Processor) Process() {
+	for msg := range config.ProcessChan {
+		m, err := processMetric(msg, Processor.metricPrefix, Processor.normalize, Processor.promFilter)
+		if err != nil {
+			log.WithFields(log.Fields{"error": err}).Error("Failed to process metric")
+			continue
+		}
+		Processor.sendMetric(m.MetricType, m.Metric, m.Value, float32(m.SampleRate))
+	}
+}
+
+func (Processor *Processor) sendMetric(metricType string, key string, value int64, sampleRate float32) {
+	/*
+	Since we have two incoming handler paths for metrics
+	we need a common switch case to actually process each metric
+	once we've formatted it consistently
+	Simply actually increment the correct values in our internal
+	statsd client (and bump related internal metrics)
+	*/
+	switch metricType {
+	case "count":
+		Processor.statsdClient.Count(key, int(value), sampleRate)
+		vmmetrics.GetOrCreateCounter("counters_added_total").Inc()
+	case "gauge":
+		Processor.statsdClient.Gauge(key, int(value))
+		vmmetrics.GetOrCreateCounter("gauges_added_total").Inc()
+	case "timing":
+		Processor.statsdClient.Timing(key, value, sampleRate)
+		vmmetrics.GetOrCreateCounter("timing_added_total").Inc()
+	case "set":
+		Processor.statsdClient.Set(key, int(value))
+		vmmetrics.GetOrCreateCounter("set_added_total").Inc()
+	}
+}
+
+func processMetric(m config.MetricRequest, prefix string, normalize bool, promFilter bool) (config.MetricRequest, error) {
 	var err error
 	if prefix != "" {
 		m.Metric = prefix + m.Metric
@@ -54,7 +98,7 @@ func processMetric(m MetricRequest, prefix string, normalize bool, promFilter bo
 	if promFilter {
 		m, err = filterPromMetric(m)
 		if err != nil {
-			return MetricRequest{}, err
+			return config.MetricRequest{}, err
 		}
 	}
 	if m.Tags != "" {
@@ -102,12 +146,12 @@ func processTags(tagsList string) string {
 	return "," + strings.TrimSuffix(finalTags, ",")
 }
 
-func filterPromMetric(m MetricRequest) (MetricRequest, error) {
+func filterPromMetric(m config.MetricRequest) (config.MetricRequest, error) {
 	/*
 	Remove/Replace any characters that don't meet the Prometheus
 	data model requirements: https://prometheus.io/docs/concepts/data_model/
 	*/
-	metric := MetricRequest{
+	metric := config.MetricRequest{
 		Metric: "", Value: m.Value, Tags: "", SampleRate: m.SampleRate,
 	}
 	if !allowedFirstChar.MatchString(m.Metric) {

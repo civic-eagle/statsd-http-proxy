@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
-	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
@@ -13,7 +12,6 @@ import (
 
 // NewHTTPRouter creates julienschmidt's HTTP router
 func NewHTTPRouter(
-	routeHandler *routehandler.RouteHandler,
 	tokenSecret string,
 ) http.Handler {
 	// build router
@@ -50,16 +48,19 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
-		"/batch/:type",
+		"/batch",
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				middleware.ValidateJWT(
 					http.HandlerFunc(
 						func(w http.ResponseWriter, r *http.Request) {
 							// get variables from path
-							params := httprouter.ParamsFromContext(r.Context())
-							metricType := params.ByName("type")
-							routeHandler.HandleBatchMetric(w, r, metricType)
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalBatch(w, r, body)
 						},
 					),
 					tokenSecret,
@@ -79,7 +80,12 @@ func NewHTTPRouter(
 							// get variables from path
 							params := httprouter.ParamsFromContext(r.Context())
 							metricType := params.ByName("type")
-							routeHandler.HandleMetric(w, r, metricType)
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetric(w, r, body, metricType)
 						},
 					),
 					tokenSecret,
@@ -100,7 +106,12 @@ func NewHTTPRouter(
 							params := httprouter.ParamsFromContext(r.Context())
 							metricType := params.ByName("type")
 							metricName := params.ByName("metric")
-							routeHandler.HandleMetricName(w, r, metricType, metricName)
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetricName(w, r, body, metricType, metricName)
 						},
 					),
 					tokenSecret,

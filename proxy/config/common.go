@@ -23,4 +23,10 @@ var (
 
 func init() {
 	ProcessChan = make(chan MetricRequest, 1000)
+
+	// gauge instantiation (for global gauges we always want to see)
+	_ = vmmetrics.NewGauge("processing_queue_length",
+		func() float64 {
+			return float64(len(ProcessChan))
+		})
 }

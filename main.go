@@ -41,8 +41,8 @@ const defaultStatsDHost = "127.0.0.1"
 const defaultStatsDPort = 8125
 
 func main() {
-	// metric instantiation (for global metrics we always want to see)
 	startTime := time.Now()
+	// track start time metric in the correct place
 	_ = vmmetrics.NewGauge("app_uptime_secs_total",
 		func() float64 {
 			return float64(time.Since(startTime).Seconds())

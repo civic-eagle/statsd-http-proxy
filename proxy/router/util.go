@@ -1,12 +1,12 @@
 package router
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
+	json "github.com/json-iterator/go"
 )
 
 /*

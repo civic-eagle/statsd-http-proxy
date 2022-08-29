@@ -19,6 +19,7 @@ func unMarshalBatch(w http.ResponseWriter, r *http.Request, body []byte) {
 	for _, m := range reqs {
 		if m.MetricType == "" {
 			log.WithFields(log.Fields{"metric": m}).Error("Metric in batch missing type, cannot forward")
+			config.DroppedMetrics.Inc()
 			continue
 		}
 		config.ProcessChan <- m

@@ -51,12 +51,13 @@ func NewProcessor(
 
 func (Processor *Processor) Process() {
 	for msg := range config.ProcessChan {
-		m, err := processMetric(msg, Processor.metricPrefix, Processor.normalize, Processor.promFilter)
+		m, err := Processor.processMetric(msg)
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("Failed to process metric")
 			continue
 		}
 		Processor.sendMetric(m.MetricType, m.Metric, m.Value, float32(m.SampleRate))
+		// log.WithFields(log.Fields{"metric": m}).Debug("Sent a metric to statsd")
 	}
 }
 
@@ -84,10 +85,10 @@ func (Processor *Processor) sendMetric(metricType string, key string, value int6
 	}
 }
 
-func processMetric(m config.MetricRequest, prefix string, normalize bool, promFilter bool) (config.MetricRequest, error) {
+func (Processor *Processor) processMetric(m config.MetricRequest) (config.MetricRequest, error) {
 	var err error
-	if prefix != "" {
-		m.Metric = prefix + m.Metric
+	if Processor.metricPrefix != "" {
+		m.Metric = Processor.metricPrefix + m.Metric
 	}
 
 	// An empty sample rate === a full sample rate
@@ -95,12 +96,12 @@ func processMetric(m config.MetricRequest, prefix string, normalize bool, promFi
 		m.SampleRate = 1
 	}
 
-	if normalize {
+	if Processor.normalize {
 		m.Metric = strings.ToLower(m.Metric)
 		m.Tags = strings.ToLower(m.Tags)
 	}
 
-	if promFilter {
+	if Processor.promFilter {
 		m, err = filterPromMetric(m)
 		if err != nil {
 			return config.MetricRequest{}, err
@@ -161,7 +162,7 @@ func filterPromMetric(m config.MetricRequest) (config.MetricRequest, error) {
 		MetricType: m.MetricType,
 	}
 	if !allowedFirstChar.MatchString(m.Metric) {
-		vmmetrics.GetOrCreateCounter("metrics_dropped_total").Inc()
+		config.DroppedMetrics.Inc()
 		return metric, fmt.Errorf("Invalid first character in metric name")
 	}
 	if !allowedNames.MatchString(m.Metric) {

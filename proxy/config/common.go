@@ -1,5 +1,9 @@
 package config
 
+import (
+	vmmetrics "github.com/VictoriaMetrics/metrics"
+)
+
 // MetricRequest: internal representation of a metric to be written
 type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
@@ -14,6 +18,7 @@ const MaxBodySize = 5000 * 1024 * 1024
 
 var (
 	ProcessChan chan MetricRequest
+	DroppedMetrics = vmmetrics.NewCounter("metrics_dropped_total")
 )
 
 func init() {

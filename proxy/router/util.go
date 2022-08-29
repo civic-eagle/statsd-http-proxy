@@ -7,36 +7,32 @@ import (
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
+	log "github.com/sirupsen/logrus"
 )
 
-/*
 func unMarshalBatch(w http.ResponseWriter, r *http.Request, body []byte) {
 	var reqs []config.MetricRequest
 	if err := json.Unmarshal(body, &reqs); err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	for _, metric := range reqs {
-		config.ProcessChan <- metric
+	for _, m := range reqs {
+		if m.MetricType == "" {
+			log.WithFields(log.Fields{"metric": m}).Error("Metric in batch missing type, cannot forward")
+			continue
+		}
+		config.ProcessChan <- m
 	}
-}*/
+}
 
 func unMarshalMetric(w http.ResponseWriter, r *http.Request, body []byte, metricType string) {
-	var reqs []config.MetricRequest
-	if err := json.Unmarshal(body, &reqs); err == nil {
-		for _, metric := range reqs {
-			metric.MetricType = metricType
-			config.ProcessChan <- metric
-		}
-	} else {
-		var req config.MetricRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			http.Error(w, err.Error(), 400)
-			return
-		}
-		req.MetricType = metricType
-		config.ProcessChan <- req
+	var req config.MetricRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), 400)
+		return
 	}
+	req.MetricType = metricType
+	config.ProcessChan <- req
 }
 
 func unMarshalMetricName(w http.ResponseWriter, r *http.Request, body []byte, metricType string, metricName string) {

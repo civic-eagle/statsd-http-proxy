@@ -5,7 +5,7 @@ type MetricRequest struct {
 	Metric	string `json:"metric,omitempty"`
 	Value    int64 `json:"value"`
 	Tags string `json:"tags"`
-	MetricType string `json:"metric_type"`
+	MetricType string `json:"metric_type,omitempty"`
 	SampleRate float64 `json:"sampleRate"`
 }
 

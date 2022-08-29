@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/middleware"
-	"github.com/civic-eagle/statsd-http-proxy/proxy/routehandler"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 	vmmetrics "github.com/VictoriaMetrics/metrics"
@@ -13,7 +12,6 @@ import (
 
 // NewHTTPRouter creates julienschmidt's HTTP router
 func NewHTTPRouter(
-	routeHandler *routehandler.RouteHandler,
 	tokenSecret string,
 ) http.Handler {
 	// build router
@@ -50,16 +48,60 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
-		"/:type",
+		"/batch",
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				middleware.ValidateJWT(
 					http.HandlerFunc(
 						func(w http.ResponseWriter, r *http.Request) {
 							// get variables from path
-							params := httprouter.ParamsFromContext(r.Context())
-							metricType := params.ByName("type")
-							routeHandler.HandleMetric(w, r, metricType)
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalBatch(w, r, body)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	/*
+	There's a lot of "duplicate" code here, but it follows
+	from a bug (https://github.com/julienschmidt/httprouter/issues/183)
+	in the httprouter package from 2017.
+
+	Until we can say:
+	router.Handler(
+		http.MethodPost,
+		"/batch",
+		...
+	)
+	router.Handler(
+		http.MethodPost,
+		"/:type",
+		...
+	)
+
+	We'll need all these extra paths...
+	*/
+	router.Handler(
+		http.MethodPost,
+		"/count",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetric(w, r, body, "count")
 						},
 					),
 					tokenSecret,
@@ -70,7 +112,74 @@ func NewHTTPRouter(
 
 	router.Handler(
 		http.MethodPost,
-		"/:type/:metric",
+		"/gauge",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetric(w, r, body, "gauge")
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/timing",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetric(w, r, body, "timing")
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/set",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetric(w, r, body, "set")
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/count/:metric",
 		middleware.Instrument(
 			middleware.ValidateCORS(
 				middleware.ValidateJWT(
@@ -78,9 +187,88 @@ func NewHTTPRouter(
 						func(w http.ResponseWriter, r *http.Request) {
 							// get variables from path
 							params := httprouter.ParamsFromContext(r.Context())
-							metricType := params.ByName("type")
 							metricName := params.ByName("metric")
-							routeHandler.HandleMetricName(w, r, metricType, metricName)
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetricName(w, r, body, "count", metricName)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/gauge/:metric",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricName := params.ByName("metric")
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetricName(w, r, body, "gauge", metricName)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/timing/:metric",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricName := params.ByName("metric")
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetricName(w, r, body, "timing", metricName)
+						},
+					),
+					tokenSecret,
+				),
+			),
+		),
+	)
+
+	router.Handler(
+		http.MethodPost,
+		"/set/:metric",
+		middleware.Instrument(
+			middleware.ValidateCORS(
+				middleware.ValidateJWT(
+					http.HandlerFunc(
+						func(w http.ResponseWriter, r *http.Request) {
+							// get variables from path
+							params := httprouter.ParamsFromContext(r.Context())
+							metricName := params.ByName("metric")
+							body, err := procBody(r)
+							if err != nil {
+								http.Error(w, err.Error(), 400)
+								return
+							}
+							unMarshalMetricName(w, r, body, "set", metricName)
 						},
 					),
 					tokenSecret,

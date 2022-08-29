@@ -7,10 +7,13 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	vmmetrics "github.com/VictoriaMetrics/metrics"
 	"github.com/civic-eagle/statsd-http-proxy/proxy"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/process"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/statsdclient"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,6 +100,42 @@ func main() {
 		}()
 	}
 
+	/*
+		Create processor and related tooling
+		Because this is async, we create it outside the
+		http server
+	*/
+	// prepare metric prefix
+	if *metricPrefix != "" && (*metricPrefix)[len(*metricPrefix)-1:] != "_" {
+		*metricPrefix = *metricPrefix + "_"
+	}
+	if *normalize {
+		*metricPrefix = strings.ToLower(*metricPrefix)
+	}
+
+	// create StatsD Client
+	statsdClient := statsdclient.NewGoMetricClient(*statsdHost, *statsdPort)
+	// open StatsD connection
+	statsdClient.Open()
+	defer statsdClient.Close()
+
+	// build processor
+	processor := processor.NewProcessor(
+		statsdClient,
+		*metricPrefix,
+		*promFilter,
+		*normalize,
+	)
+
+	/*
+		Multiple processing threads so we don't get bottle-necked on one processor
+		Since each individual object on the channel is unique, we don't need
+		state between processor threads!
+	*/
+	for thread := 1; thread <= 4; thread++ {
+		go processor.Process()
+	}
+
 	// start proxy server
 	proxyServer := proxy.NewServer(
 		*httpHost,
@@ -104,13 +143,8 @@ func main() {
 		*httpReadTimeout,
 		*httpWriteTimeout,
 		*httpIdleTimeout,
-		*statsdHost,
-		*statsdPort,
 		*tlsCert,
 		*tlsKey,
-		*metricPrefix,
-		*promFilter,
-		*normalize,
 		*tokenSecret,
 		*verbose,
 	)

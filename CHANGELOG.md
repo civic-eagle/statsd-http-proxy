@@ -1,3 +1,9 @@
+## 2.0
+  * Channel for processing metrics
+    * significantly improve client performance (since client doesn't have to wait for entire processing pipelien to finish)
+  * move batch writes to separate endpoint
+    * allows for individual stats in a batch to be different types
+
 ## 1.7
   * batch writes into the `/:type` endpoint
     * many metrics in one write to the proxy, vastly improving performance over the wire

@@ -21,6 +21,7 @@ var (
 	gauges = vmmetrics.NewCounter("gauges_added_total")
 	timings = vmmetrics.NewCounter("timing_added_total")
 	sets = vmmetrics.NewCounter("set_added_total")
+	droppedTags = vmmetrics.NewCounter("metrics_tags_dropped_total")
 )
 
 // RouteHandler as a collection of route handlers
@@ -138,15 +139,15 @@ func processTags(tagsList string) string {
 	for _, pair := range list {
 		pairItems := strings.Split(pair, "=")
 		if len(pairItems) != 2 {
-			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
+			droppedTags.Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Missing pair")
 			continue
 		} else if len(strings.TrimSpace(pairItems[0])) == 0 {
-			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
+			droppedTags.Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag key")
 			continue
 		} else if len(strings.TrimSpace(pairItems[1])) == 0 {
-			vmmetrics.GetOrCreateCounter("metrics_tags_dropped_total").Inc()
+			droppedTags.Inc()
 			log.WithFields(log.Fields{"Tags": tagsList, "pair": pairItems}).Debug("Invalid tag value")
 			continue
 		}

@@ -170,7 +170,7 @@ Sample code to send a group metrics in browser with JWT token in header:
 
 ```javascript
 $.ajax({
-    url: 'http://127.0.0.1:8080/count/',
+    url: 'http://127.0.0.1:8080/batch/',
     method: 'POST',
     headers: {
         'X-JWT-Token': 'some-jwt-token'
@@ -180,17 +180,19 @@ $.ajax({
       {
         metric: 'some.key.name',
         value: 100500,
-        tags: 'env=prod,locale=en-us'
+        tags: 'env=prod,locale=en-us',
+        metric_type: 'count'
       },
       {
         metric: 'some.other.key.name',
-        value: 1
+        value: 1,
+        metric_type: 'gauge'
       }
     ]
 });
 ```
 
-This allows us to send multiple metrics at once (of the same type), saving significant bandwidth/processing time for larger groups of writes.
+This allows us to send multiple metrics at once, saving significant bandwidth/processing time for larger groups of writes.
 
 ## Legacy Pattern
 

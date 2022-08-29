@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/civic-eagle/statsd-http-proxy/proxy/router"
+	"github.com/civic-eagle/statsd-http-proxy/proxy/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -86,6 +87,7 @@ func (proxyServer *Server) Listen() {
 
 	// Gracefull shutdown
 	log.Info("Stopping HTTP server")
+	close(config.ProcessChan)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {

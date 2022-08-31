@@ -1,3 +1,9 @@
+## 2.0.3
+  * improve internal metrics some
+    * Track dropped tags and processing queue length
+  * increase internal queue depth
+    * For higher through-put situations, 10k vs 1k queue depth may matter.
+
 ## 2.0.2
   * handle bad metric type gracefully
 

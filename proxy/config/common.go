@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	ProcessChan = make(chan MetricRequest, 1000)
+	ProcessChan = make(chan MetricRequest, 10000)
 
 	// gauge instantiation (for global gauges we always want to see)
 	_ = vmmetrics.NewGauge("processing_queue_length",

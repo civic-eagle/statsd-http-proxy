@@ -20,5 +20,5 @@ func TestValidateInstrumentationWithoutProxy(t *testing.T) {
 
 	rt.Equal(http.StatusOK, response.StatusCode)
 	metrics := vmmetrics.ListMetricNames()
-	rt.Equal(7, len(metrics))
+	rt.Equal(2, len(metrics))
 }

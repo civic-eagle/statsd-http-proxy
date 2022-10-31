@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/GoMetric/go-statsd-client v1.1.2
-	github.com/VictoriaMetrics/metrics v1.22.2
+	github.com/VictoriaMetrics/metrics v1.23.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/urfave/negroni v1.0.0
 )
 

@@ -3,7 +3,7 @@
 GH_ADDR := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g')
 DOCKER_USER := gcr.io/civic-eagle-enview-dev
 NAME := statsd-http-proxy
-GO_VER := 1.19.2
+GO_VER := 1.19.4
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 BUILDTIME ?= $(shell date)

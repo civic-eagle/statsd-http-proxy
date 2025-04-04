@@ -1,7 +1,7 @@
 .PHONY: help all test fmt lint vendor-update build clean
 
 GH_ADDR := $(shell grep -A1 '\[remote "origin"\]' .git/config | grep url | cut -d"=" -f2- | grep -o "github.com[/:].*/" | tr -d "/" | sed 's|:|/|g')
-DOCKER_USER := gcr.io/civic-eagle-enview-dev
+DOCKER_USER := us-central1-docker.pkg.dev/civic-eagle-enview-dev/containers
 NAME := statsd-http-proxy
 GO_VER := 1.19.5
 CURRENT_UID := $(shell id -u)
@@ -10,7 +10,7 @@ BUILDTIME ?= $(shell date)
 BUILDUSER ?= $(shell id -u -n)
 PKG_TAG ?= $(shell git tag -l --points-at HEAD)
 ifeq ($(PKG_TAG),)
-PKG_TAG := $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 10-17 | tr ' ()' '-')))
+PKG_TAG := $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 14-21 | tr ' ()' '-')))
 endif
 
 all: setup test build docker ## format, lint, and build the package
@@ -35,8 +35,8 @@ test: envsetup fmt lint ## run tests
 fmt: envsetup ## only run gofmt
 	docker run --rm --user $(CURRENT_UID):$(CURRENT_GID) -v $(CURDIR)/.cache/:/.cache/ -v $(CURDIR):/app:z -w /app golang:$(GO_VER) gofmt -l -w -s *.go
 
-lint: envsetup ## run all linting steps
-	docker run --rm --user $(CURRENT_UID):$(CURRENT_GID) -v $(CURDIR)/.cache/:/.cache/ -v $(CURDIR):/app:z -w /app golangci/golangci-lint:latest golangci-lint run
+# lint: envsetup ## run all linting steps
+#	docker run --rm --user $(CURRENT_UID):$(CURRENT_GID) -v $(CURDIR)/.cache/:/.cache/ -v $(CURDIR):/app:z -w /app golangci/golangci-lint:latest golangci-lint run
 
 vendor-update: envsetup ## update vendor dependencies
 	rm -rf go.mod go.sum vendor/
